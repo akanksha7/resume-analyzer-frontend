@@ -6,6 +6,7 @@ import PricingPage from './pages/PricingPage';
 import CheckoutPage from './pages/CheckoutPage';
 import SuccessPage from './pages/SuccessPage';
 import DashboardPage from './pages/DashboardPage';
+import ResumeAnalysisPage from './pages/ResumeAnalysisPage';
 function App() {
   return (
     <Router>
@@ -16,6 +17,7 @@ function App() {
         <Route path="/checkout/:planId" element={<CheckoutPage />} />
         <Route path="/success" element={<SuccessPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/resume-analysis" element={<ResumeAnalysisPage />} />
       </Routes>
     </Router>
   );
