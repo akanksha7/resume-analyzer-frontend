@@ -1,11 +1,25 @@
-// src/pages/Dashboard.tsx
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { UploadCloud, Settings, Home, PieChart } from 'lucide-react';
+import { UploadCloud} from 'lucide-react';
+import { AppSidebar } from "@/components/app-sidebar"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
 
 const Dashboard = () => {
  const [jobDesc, setJobDesc] = useState('');
@@ -22,32 +36,31 @@ const Dashboard = () => {
  return (
    <div className="min-h-screen bg-background flex">
      {/* Sidebar */}
-     <div className="w-64 bg-background-secondary border-r border-border">
-       <div className="p-6">
-         <h2 className="text-lg font-semibold text-foreground mb-6">Dashboard</h2>
-         <nav className="space-y-2">
-           <Button variant="ghost" className="w-full justify-start">
-             <Home className="mr-2 h-4 w-4" />
-             Home
-           </Button>
-           <Button variant="ghost" className="w-full justify-start">
-             <PieChart className="mr-2 h-4 w-4" />
-             Analytics
-           </Button>
-           <Button variant="ghost" className="w-full justify-start">
-             <Settings className="mr-2 h-4 w-4" />
-             Settings
-           </Button>
-         </nav>
-       </div>
-     </div>
-
-     {/* Main Content */}
-     <div className="flex-1 p-8">
-       <Card className="max-w-4xl mx-auto p-6">
+     <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink href="#">
+                  {/* {catalog.name} */}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                {/* <BreadcrumbPage>{job.name}</BreadcrumbPage> */}
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </header>
+        <div className="flex-1 p-8">
+       {/* <Card className="max-w-4xl mx-auto p-6">
          <div className="space-y-6">
            {/* Job Title Input */}
-           <div>
+           {/* <div>
              <label className="block text-sm font-medium text-foreground mb-2">
                Job Title
              </label>
@@ -57,10 +70,10 @@ const Dashboard = () => {
                placeholder="Enter job title"
                className="w-full"
              />
-           </div>
+           </div> */}
 
            {/* Job Description */}
-           <div>
+           {/* <div>
              <label className="block text-sm font-medium text-foreground mb-2">
                Job Description
              </label>
@@ -70,10 +83,10 @@ const Dashboard = () => {
                placeholder="Paste job description here..."
                className="min-h-[200px]"
              />
-           </div>
+           </div> */}
 
            {/* Resume Upload */}
-           <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+           {/* <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
              <Input
                type="file"
                onChange={handleFileUpload}
@@ -96,23 +109,28 @@ const Dashboard = () => {
                  </span>
                )}
              </label>
-           </div>
+           </div> */}
 
            {/* Progress Bar */}
-           {progress > 0 && (
+           {/* {progress > 0 && (
              <Progress value={progress} className="w-full" />
-           )}
+           )} */}
 
            {/* Analyze Button */}
-           <Button 
+           {/* <Button 
              className="w-full"
              disabled={!jobTitle || !jobDesc || files.length === 0}
            >
              Analyze Resumes
            </Button>
          </div>
-       </Card>
+       </Card> */} 
      </div>
+      </SidebarInset>
+    </SidebarProvider>
+
+     {/* Main Content */}
+     
    </div>
  );
 };
