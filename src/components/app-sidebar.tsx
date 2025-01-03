@@ -1,8 +1,9 @@
+// components/app-sidebar.tsx
 import * as React from "react"
 import { ChevronRight, MoreHorizontal, Plus, Trash2 } from "lucide-react"
-import { addCatalog } from "@/services/api"
 import { SearchForm } from "@/components/search-form"
 import { NavUser } from "@/components/nav-user"
+import { Button } from "@/components/ui/button"
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,58 +14,147 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@radix-ui/react-dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { CreateCatalogDialog } from "./create-catalog-dialog"
+import { api } from "@/services/api"
 
-const userdata = {
-  name: "test",
-  email: "string",
-  avatar: "string"
+// Types
+interface JobDescription {
+  id: string;
+  title: string;
+  description: string;
+  catalog_id: string;
 }
 
-const data = {
-  navMain: [
-    {
-      title: "IBM",
-      url: "#",
-      items: [
-        {
-          title: "Software Engineer 2",
-          url: "#",
-        },
-        {
-          title: "Technical Specialist",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Meta",
-      url: "#",
-      items: [
-        {
-          title: "Manager",
-          url: "#",
-        },
-        {
-          title: "Data Fetching",
-          url: "#",
-          isActive: true,
-        },
-      ],
-    },
-  ],
+interface Catalog {
+  id: string;
+  name: string;
+  description: string;
+  items?: JobDescription[];
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  onJobSelect: (job: JobDescription & { catalogName: string }) => void;
+  onCreateJob: (catalogId: string, catalogName: string) => void;
+  onCatalogSelect: (catalog: { id: string; name: string }) => void;
+  onCatalogDelete: (catalogId: string) => void;
+}
+
+export function AppSidebar({ 
+  onJobSelect, 
+  onCreateJob, 
+  onCatalogSelect, 
+  onCatalogDelete, 
+  ...props 
+}: AppSidebarProps) {
+  const [catalogs, setCatalogs] = React.useState<Catalog[]>([]);
+  const [activeJobId, setActiveJobId] = React.useState<string | null>(null);
+  const [page, setPage] = React.useState(1);
+  const [hasMore, setHasMore] = React.useState(true);
+  const [loading, setLoading] = React.useState(false);
+  const [openCatalogId, setOpenCatalogId] = React.useState<string | null>(null);
+  const initialFetchRef = React.useRef(false);
+
+  const fetchCatalogs = React.useCallback(async () => {
+    if (loading) return;
+    
+    try {
+      setLoading(true);
+      const data = await api.getCatalogs(page);
+      if (data.length < 10) {
+        setHasMore(false);
+      }
+      if (page === 1) {
+        setCatalogs(data);
+      } else {
+        setCatalogs(prev => [...prev, ...data]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch catalogs:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, loading]);
+
+  const fetchJobDescriptions = React.useCallback(async (catalogId: string) => {
+    try {
+      const jobs = await api.getJobDescriptions(catalogId);
+      setCatalogs(prevCatalogs =>
+        prevCatalogs.map(catalog =>
+          catalog.id === catalogId
+            ? { ...catalog, items: jobs }
+            : catalog
+        )
+      );
+    } catch (error) {
+      console.error('Failed to fetch job descriptions:', error);
+      // Set empty array on error to show "No jobs yet" message
+      setCatalogs(prevCatalogs =>
+        prevCatalogs.map(catalog =>
+          catalog.id === catalogId
+            ? { ...catalog, items: [] }
+            : catalog
+        )
+      );
+    }
+  }, []);
+
+  // Initial fetch
+  React.useEffect(() => {
+    if (!initialFetchRef.current) {
+      initialFetchRef.current = true;
+      fetchCatalogs();
+    }
+  }, [fetchCatalogs]);
+
+  // Handle pagination
+  React.useEffect(() => {
+    if (initialFetchRef.current && page > 1) {
+      fetchCatalogs();
+    }
+  }, [page, fetchCatalogs]);
+
+  const handleCatalogCreate = (catalog: Catalog) => {
+    setCatalogs(prev => [catalog, ...prev]);
+  };
+
+  const handleDeleteCatalog = (catalogId: string) => {
+    setCatalogs(prev => prev.filter(catalog => catalog.id !== catalogId));
+    if (catalogId === openCatalogId) {
+      setOpenCatalogId(null);
+    }
+    onCatalogDelete(catalogId);
+  };
+
+  const handleJobClick = (job: JobDescription, catalogName: string) => {
+    setActiveJobId(job.id);
+    onJobSelect({ ...job, catalogName });
+  };
+
+  const handleCatalogClick = (catalog: Catalog, isOpen: boolean) => {
+    setOpenCatalogId(isOpen ? catalog.id : null);
+    onCatalogSelect(catalog);
+    if (isOpen && (!catalog.items || catalog.items.length === 0)) {
+      fetchJobDescriptions(catalog.id);
+    }
+  };
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -81,69 +171,105 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
         <SearchForm />
       </SidebarHeader>
+
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Catalogs</SidebarGroupLabel>
-          <SidebarGroupAction title="Add Catalog" className="flex items-center gap-2">
-            <Plus className="w-4 h-4" onClick={() => addCatalog()}/>
-          </SidebarGroupAction>
+          <SidebarGroupLabel>Job Catalogs</SidebarGroupLabel>
+          <CreateCatalogDialog onCatalogCreate={handleCatalogCreate} />
         </SidebarGroup>
 
-        {/* Collapsible SidebarGroups */}
-        {data.navMain.map((parent) => (
-          <Collapsible key={parent.title} defaultOpen className="group/collapsible">
+        {catalogs.map((catalog) => (
+          <Collapsible 
+            key={catalog.id} 
+            open={openCatalogId === catalog.id}
+            onOpenChange={(isOpen) => handleCatalogClick(catalog, isOpen)}
+            className="group/collapsible"
+          >
             <SidebarGroup>
               <SidebarGroupLabel className="flex items-center justify-between">
-                <span className="flex-1">{parent.title}</span>
-                {/* Dropdown menu for "..." options */}
+                <span className="flex-1">{catalog.name}</span>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="p-2 text-gray-500 hover:text-gray-700 focus:outline-none">
+                    <button 
+                      className="p-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <MoreHorizontal className="w-4 h-4" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-white shadow-md rounded-md p-1">
+                  <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem
-                      onSelect={() => console.log(`Add Job to ${parent.title}`)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+                      onClick={() => onCreateJob(catalog.id, catalog.name)}
+                      className="cursor-pointer"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="mr-2 h-4 w-4" />
                       Add Job
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onSelect={() => console.log(`Delete Job from ${parent.title}`)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-100 rounded-md"
+                      onClick={() => handleDeleteCatalog(catalog.id)}
+                      className="cursor-pointer text-red-600 focus:text-red-600"
                     >
-                      <Trash2 className="w-4 h-4" />
-                      Delete Job
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Catalog
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                {/* ChevronRight for collapsible trigger */}
-                <CollapsibleTrigger asChild>
+                <CollapsibleTrigger asChild onClick={(e) => e.stopPropagation()}>
                   <ChevronRight className="transition-transform group-data-[state=open]/collapsible:rotate-90" />
                 </CollapsibleTrigger>
               </SidebarGroupLabel>
               <CollapsibleContent>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {parent.items.map((subItem) => (
-                      <SidebarMenuItem key={subItem.title}>
-                        <SidebarMenuButton asChild isActive={subItem.isActive}>
-                          <a href={subItem.url}>{subItem.title}</a>
-                        </SidebarMenuButton>
+                    {catalog.items === undefined ? (
+                      <SidebarMenuItem>
+                        <span className="text-sm text-muted-foreground px-4 py-2">
+                          Loading...
+                        </span>
                       </SidebarMenuItem>
-                    ))}
+                    ) : catalog.items.length === 0 ? (
+                      <SidebarMenuItem>
+                        <span className="text-sm text-muted-foreground px-4 py-2">
+                          No jobs yet
+                        </span>
+                      </SidebarMenuItem>
+                    ) : (
+                      <SidebarMenuSub>
+                        {catalog.items.map((job) => (
+                          <SidebarMenuSubItem key={job.id}>
+                            <SidebarMenuSubButton
+                              isActive={job.id === activeJobId}
+                              onClick={() => handleJobClick(job, catalog.name)}
+                            >
+                              {job.title}
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    )}
                   </SidebarMenu>
                 </SidebarGroupContent>
               </CollapsibleContent>
             </SidebarGroup>
           </Collapsible>
         ))}
+
+        {hasMore && (
+          <div className="p-4">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setPage(p => p + 1)}
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Load More'}
+            </Button>
+          </div>
+        )}
       </SidebarContent>
 
       <SidebarFooter>
-        <NavUser user={userdata} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
