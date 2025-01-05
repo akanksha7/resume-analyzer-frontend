@@ -5,11 +5,6 @@ export interface LoginCredentials {
   password: string;
 }
 
-export interface User {
-  id: string;
-  email: string;
-  roles: string[];
-}
 
 export interface AuthState {
   user: User | null;
@@ -20,14 +15,25 @@ export interface AuthState {
   error: string | null;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  email_verified: boolean;
+  is_active_plan: boolean;
+  plan_id: string | null;
+  plan_started_at: string | null;
+  plan_type: string;
+  remaining_analysis: number;
+}
+
 export interface LoginResponse {
   access_token: string;
   refresh_token: string;
   expires_in: number;
   roles: string[];
   token_type: string;
+  user: User;
 }
-
 
 export interface RegistrationState {
   plan:  Plan | null;

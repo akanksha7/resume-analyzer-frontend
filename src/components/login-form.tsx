@@ -11,23 +11,54 @@ import { Label } from "@/components/ui/label"
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/services/authContext';
-import { Eye, EyeOff } from 'lucide-react'; // Import eye icons
+import { Eye, EyeOff } from 'lucide-react'; 
+import { toast } from "./hooks/use-toast";
+import { api } from "@/services/api";
+import { LoginResponse } from "@/types/auth";
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { login, isLoading, error } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const { error } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+  
     try {
-      await login({ email, password });
-      navigate('/dashboard');
-    } catch (error) {
-      // Error is handled by auth context
+      setIsLoading(true);
+      const response: LoginResponse = await api.login({ email, password });
+  
+        if (!response.user.email_verified) {
+          // User needs to verify email
+          navigate('/verify-otp', { 
+            state: { email }  
+          });
+          return;
+        }
+  
+        if (!response.user.is_active_plan) {
+          // User needs to complete payment
+          navigate('/plans', { state: { isAuthenticated: true } });
+          return;
+        }
+
+        // User is verified and has paid
+        if (response.user.email_verified && response.user.is_active_plan) {
+          navigate('/dashboard', { state: { isAuthenticated: true, user: response.user } });
+          return;
+        }
+      
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Registration failed, Try again later",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -114,7 +145,7 @@ export function LoginForm() {
 
           <div className="mt-6 text-center text-sm text-foreground-muted">
             Don't have an account?{' '}
-            <Link to="/plans" className="text-primary hover:text-primary-hover">
+            <Link to="/register" className="text-primary hover:text-primary-hover">
               Sign up
             </Link>
           </div>

@@ -20,14 +20,15 @@ export const verifyEmail = async (email: string): Promise<APIResponse> => {
   }
 };
 
-export const registerEmail = async (email: string, password: string, plan_type: string): Promise<APIResponse> => {
+export const registerEmail = async (email: string, password: string): Promise<APIResponse> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/api/auth/register`, { email, password, plan_type });
+    const response = await axios.post(`${API_BASE_URL}/api/auth/register`, { email, password });
     return response.data;
   } catch (error: any) {
-    console.error("Error verifying email:", error.response?.data?.message || error.message);
-    throw new Error(error.response?.data?.message || "Failed to send verification code");
+    console.error("Error in registration:", error.response?.data?.message || error.message);
+    throw new Error(error.response?.data?.message || "Registration failed");
   }
+
 };
 
 // Verify OTP
@@ -145,6 +146,23 @@ export const api = {
 
     if (!response.ok) {
       throw new Error('Failed to update job');
+    }
+
+    return response.json();
+  },
+  getPlans: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/plans`);
+    return response.json();
+  },
+  getMe: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch user data');
     }
 
     return response.json();

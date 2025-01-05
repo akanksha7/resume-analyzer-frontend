@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { motion } from 'framer-motion';
-import { Check, X, Sparkles } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -9,20 +9,43 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PricingPlan } from '@/types/pricing';
+import { Button } from './ui/button';
+
+// interface PricingFeature {
+//   name: string;
+//   included: boolean;
+// }
+
+// interface PricingPlan {
+//   id: string;
+//   name: string;
+//   price: number;
+//   description: string;
+//   analysisCount: number | 'Unlimited';
+//   features: PricingFeature[];
+//   popular?: boolean;
+// }
 
 interface PricingCardProps {
-  plan: PricingPlan;
-  onSelect: (planId: string) => void;
-  isYearly?: boolean;
+  plan: {
+    id: string;
+    name: string;
+    price: number;
+    description: string;
+    analysisCount: number;
+    features: { name: string; included: boolean }[];
+    popular?: boolean;
+  };
+  showSelectButton?: boolean;
+  onSelect?: (planId: string) => void;
 }
 
+
 export const PricingCard: FC<PricingCardProps> = ({ 
-  plan, 
-  onSelect,
-  isYearly = false 
+  plan,
+  showSelectButton = false,
+  onSelect
 }) => {
   return (
     <motion.div
@@ -33,18 +56,18 @@ export const PricingCard: FC<PricingCardProps> = ({
       className="h-full"
     >
       <Card className={cn(
-        "h-full flex flex-col",
-        "relative overflow-hidden",
-        "transition-shadow duration-300",
-        plan.popular && "border-blue-500/50 shadow-lg shadow-blue-500/10",
-        !plan.popular && "hover:border-blue-500/30"
-      )}>
+      "h-full flex flex-col",
+      "relative overflow-hidden",
+      "transition-shadow duration-300",
+      plan.popular && "border-blue-500/50 shadow-lg shadow-blue-500/10",
+      !plan.popular && "hover:border-blue-500/30"
+    )}>
         {plan.popular && (
           <>
             {/* Popular badge */}
             <div className="absolute top-0 right-0">
               <div className="relative">
-                <div className="absolute -right-12 top-8 rotate-45 bg-blue-500 py-1 px-12 text-sm text-white">
+                <div className="absolute -right-10 top-6 rotate-45 bg-blue-500 py-1 px-12 text-sm text-white">
                   Popular
                 </div>
               </div>
@@ -57,13 +80,11 @@ export const PricingCard: FC<PricingCardProps> = ({
         )}
 
         <CardHeader className="text-center pb-8 pt-12">
-          <div className="mb-4">
-            {plan.popular ? (
-              <Sparkles className="w-12 h-12 mx-auto text-blue-500 mb-2" />
-            ) : (
+          {/* <div className="mb-4">
+            
               <div className="w-12 h-12 mx-auto" />
-            )}
-          </div>
+
+          </div> */}
           <CardTitle className="text-2xl font-bold mb-2">{plan.name}</CardTitle>
           <p className="text-sm text-muted-foreground">{plan.description}</p>
         </CardHeader>
@@ -71,17 +92,15 @@ export const PricingCard: FC<PricingCardProps> = ({
         <CardContent className="flex-1">
           {/* Pricing */}
           <div className="text-center mb-6">
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center gap-2">
               <span className="text-4xl font-bold">${plan.price}</span>
-              <span className="text-muted-foreground ml-2">
-                /{isYearly ? 'year' : 'month'}
-              </span>
+              <span className="text-sm text-muted-foreground">/package</span>
             </div>
-            {isYearly && (
-              <Badge variant="secondary" className="mt-2">
-                Save {Math.round((plan.price * 12 - plan.price) / (plan.price * 12) * 100)}%
-              </Badge>
-            )}
+            <Badge variant="secondary" className="mt-2">
+              {typeof plan.analysisCount === 'number' 
+                ? `${plan.analysisCount} Resume Analysis` 
+                : 'Unlimited Analysis'}
+            </Badge>
           </div>
 
           {/* Features */}
@@ -111,29 +130,22 @@ export const PricingCard: FC<PricingCardProps> = ({
               </motion.div>
             ))}
           </div>
-        </CardContent>
-
-        <CardFooter className="pt-8">
-          <Button 
+          </CardContent>
+      <CardFooter>
+        {showSelectButton && (
+          <Button
             className={cn(
-              "w-full rounded-full h-12",
+              "w-full",
               plan.popular && "bg-blue-500 hover:bg-blue-600"
             )}
             variant={plan.popular ? "default" : "outline"}
-            onClick={() => onSelect(plan.id)}
+            onClick={() => onSelect?.(plan.id)}
           >
-            Get Started
-            <motion.div
-              className="ml-2"
-              animate={{ x: [0, 4, 0] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-            >
-              →
-            </motion.div>
+            Select Plan
           </Button>
-        </CardFooter>
-      </Card>
+        )}
+      </CardFooter>
+    </Card>
     </motion.div>
   );
 };
-

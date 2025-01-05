@@ -2,6 +2,7 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useNavigate } from 'react-router-dom';
 
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -15,9 +16,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-
-
-
 import { verifyOTP } from "@/services/api";
 
 const FormSchema = z.object({
@@ -28,12 +26,12 @@ const FormSchema = z.object({
 
 interface InputOTPFormProps {
  email: string;
- onOtpVerified: () => void;
+
 }
 
-export function InputOTPForm({ email, onOtpVerified }: InputOTPFormProps) {
+export function InputOTPForm({ email }: InputOTPFormProps) {
  const [isVerifying, setIsVerifying] = useState(false);
-
+ const navigate = useNavigate();
  const form = useForm<z.infer<typeof FormSchema>>({
    resolver: zodResolver(FormSchema),
    defaultValues: {
@@ -42,26 +40,22 @@ export function InputOTPForm({ email, onOtpVerified }: InputOTPFormProps) {
  });
 
  async function onSubmit(data: z.infer<typeof FormSchema>) {
-   try {
-     setIsVerifying(true);
-     await verifyOTP(email, data.pin);
-     onOtpVerified();
-     toast({
-       title: "Success",
-       description: "Email verified successfully",
-       variant: "default",
-     });
-   } catch (error) {
-     toast({
-       title: "Error",
-       description: error instanceof Error ? error.message : "Invalid code",
-       variant: "destructive",
-     });
-     form.reset();
-   } finally {
-     setIsVerifying(false);
-   }
- }
+  try {
+    setIsVerifying(true);
+    await verifyOTP(email, data.pin);
+    navigate('/plans');
+    toast({
+      title: "Success",
+      description: "Email verified successfully, Please select a plan",
+      variant: "default",
+    });
+
+  } catch (error) {
+    form.reset();
+  } finally {
+    setIsVerifying(false);
+  }
+}
 
  return (
    <Form {...form}>

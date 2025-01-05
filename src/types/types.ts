@@ -32,9 +32,12 @@ export interface ActiveJob {
 export interface Plan {
   id: string;
   name: string;
-  description: string;
   price: number;
-  billingPeriod: "monthly" | "yearly";
-  features: { name: string; included: boolean; }[];
+  description: string;
+  analysisCount: number;
+  features: {
+    name: string;
+    included: boolean;
+  }[];
   popular?: boolean;
 }

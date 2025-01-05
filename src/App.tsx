@@ -9,12 +9,16 @@ import DashboardPage from './pages/DashboardPage';
 import ResumeAnalysisPage from './pages/ResumeAnalysisPage';
 import './index.css';
 import { LoadingSpinner } from './components/loading-spinner';
-import { RegistrationProvider } from './services/registrationContext';
+import RegisterPage from './pages/RegisterPage';
+import { Toaster } from './components/ui/toaster';
+import VerifyOtpPage from './pages/VerifyOtpPage';
+
+
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
-
+  const { isAuthenticated, isLoading, user} = useAuth();
+  debugger;
   if (isLoading) {
     return <LoadingSpinner /> 
   }
@@ -22,19 +26,26 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+  if(!user?.email_verified) {
+    return <Navigate to="/verify-otp" state={{ email: user?.email }} replace />;
+  }
+  if(!user?.is_active_plan) {
+    return <Navigate to="/plans" state={{ isAuthenticated: true }} replace />;
+  }
+
 
   return <>{children}</>;
 }
 
 // Public Route Component - redirects to dashboard if already authenticated
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return <LoadingSpinner /> 
   }
 
-  if (isAuthenticated) {
+  if (isAuthenticated && user?.email_verified && user?.is_active_plan) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -55,22 +66,28 @@ function AppRoutes() {
           </PublicRoute>
         } 
       />
+       <Route path="/register" element={
+         <PublicRoute>
+            <RegisterPage />
+        </PublicRoute>
+      } />
       
+      <Route path="/verify-otp" element={
+        <PublicRoute>
+          <VerifyOtpPage />
+        </PublicRoute>
+      } />
+
       <Route path="/plans" element={
          <PublicRoute>
-          <RegistrationProvider>
             <PricingPage />
-          </RegistrationProvider>
         </PublicRoute>
       } />
       <Route 
         path="/checkout/:planId" 
         element={
           <PublicRoute>
-            <RegistrationProvider>
-              <CheckoutPage />
-            </RegistrationProvider>
-           
+            <CheckoutPage />
           </PublicRoute>
         } 
       />
@@ -112,6 +129,7 @@ function App() {
   return (
     <Router>
       <AuthProvider>
+        <Toaster />
         <AppRoutes />
       </AuthProvider>
     </Router>
