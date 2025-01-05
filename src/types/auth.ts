@@ -1,3 +1,4 @@
+import { Plan } from '@/types/types';
 
 export interface LoginCredentials {
   email: string;
@@ -27,3 +28,10 @@ export interface LoginResponse {
   token_type: string;
 }
 
+
+export interface RegistrationState {
+  plan:  Plan | null;
+  email: string;
+  isEmailVerified: boolean;
+  isPaymentCompleted: boolean;
+}

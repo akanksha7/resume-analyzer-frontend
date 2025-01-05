@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 
 const BannerSVG = () => (
@@ -12,22 +11,26 @@ const BannerSVG = () => (
   >
     {/* Gradient definitions (optional, if you want gradients elsewhere) */}
     <defs>
+      <filter id="blur">
+        <feGaussianBlur stdDeviation="3" />
+      </filter>
       <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
         <stop offset="0%" style={{ stopColor: '#60A5FA', stopOpacity: 1 }} />
         <stop offset="100%" style={{ stopColor: '#2B6CB0', stopOpacity: 1 }} />
       </linearGradient>
     </defs>
     
-    {/* Enhanced animated circles with blur effect */}
     <motion.circle 
-      cx="100" cy="100" r="80" 
-      fill="#60A5FA" 
-      opacity="0.15"
-      filter="url(#blur)"
+      cx={100}
+      cy={100}
+      initial={{ r: 80 }}
       animate={{ 
         r: [80, 88, 80],
         opacity: [0.15, 0.2, 0.15] 
       }}
+      fill="#60A5FA" 
+      opacity={0.15}
+      filter="url(#blur)"
       transition={{ 
         duration: 4,
         repeat: Infinity,
@@ -35,14 +38,16 @@ const BannerSVG = () => (
       }}
     />
     <motion.circle 
-      cx="160" cy="100" r="70" 
-      fill="#60A5FA" 
-      opacity="0.2"
-      filter="url(#blur)"
+      cx={160}
+      cy={100}
+      initial={{ r: 70 }}
       animate={{ 
         r: [70, 78, 70],
         opacity: [0.2, 0.25, 0.2] 
       }}
+      fill="#60A5FA" 
+      opacity={0.2}
+      filter="url(#blur)"
       transition={{ 
         duration: 4,
         repeat: Infinity,
@@ -51,7 +56,6 @@ const BannerSVG = () => (
       }}
     />
     
-    {/* Animated wave with gradient */}
     <motion.path 
       d="M60 100 Q80 60 100 100 Q120 140 140 100 Q160 60 180 100" 
       stroke="url(#waveGradient)" 
@@ -65,7 +69,6 @@ const BannerSVG = () => (
       }}
     />
     
-    {/* Enhanced company name with modern typography */}
     <motion.text 
       x="240" y="90" 
       fontFamily="Inter, sans-serif" 
@@ -79,7 +82,6 @@ const BannerSVG = () => (
       Talent<tspan fill="#60A5FA">Tuner</tspan>
     </motion.text>
     
-    {/* Updated tagline */}
     <motion.text 
       x="240" y="130" 
       fontFamily="Inter, sans-serif" 

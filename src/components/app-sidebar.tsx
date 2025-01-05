@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { CreateCatalogDialog } from "./create-catalog-dialog"
 import { api } from "@/services/api"
+import { ActiveJob } from "@/types/types"
 
 // Types
 interface JobDescription {
@@ -49,18 +50,23 @@ interface Catalog {
   items?: JobDescription[];
 }
 
+
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onJobSelect: (job: JobDescription & { catalogName: string }) => void;
   onCreateJob: (catalogId: string, catalogName: string) => void;
   onCatalogSelect: (catalog: { id: string; name: string }) => void;
   onCatalogDelete: (catalogId: string) => void;
+  onJobUpdate?: (updatedJob: ActiveJob) => void;
+  onJobDelete?: (catalogId: string, jobId: string) => void;
 }
 
 export function AppSidebar({ 
   onJobSelect, 
   onCreateJob, 
   onCatalogSelect, 
-  onCatalogDelete, 
+  onCatalogDelete,
+  onJobUpdate,
+  onJobDelete,
   ...props 
 }: AppSidebarProps) {
   const [catalogs, setCatalogs] = React.useState<Catalog[]>([]);
@@ -254,7 +260,7 @@ export function AppSidebar({
           </Collapsible>
         ))}
 
-        {hasMore && (
+        {/* {hasMore && (
           <div className="p-4">
             <Button
               variant="outline"
@@ -265,7 +271,7 @@ export function AppSidebar({
               {loading ? 'Loading...' : 'Load More'}
             </Button>
           </div>
-        )}
+        )} */}
       </SidebarContent>
 
       <SidebarFooter>

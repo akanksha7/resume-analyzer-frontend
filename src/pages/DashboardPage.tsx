@@ -18,7 +18,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { UploadCloud } from "lucide-react"
+import { Link as RouterLink } from 'react-router-dom';
+import { MoreHorizontal, Pencil, Trash2, UploadCloud } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -30,19 +31,21 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Card } from "@/components/ui/card"
 import { api } from "@/services/api"
+import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
-// Types
+import { useToast } from "@/components/hooks/use-toast";
+
 interface ResumeUploadResult {
-  filename: string;
-  status: string;
-}
-
-interface JobDescription {
   id: string;
-  title: string;
-  description: string;
-  catalog_id: string;
-  created_at: string;
+  filename: string;
+  analysisStatus: 'queued' | 'completed';
+  matchScore: number;
 }
 
 interface ActiveJob {
@@ -51,6 +54,11 @@ interface ActiveJob {
   catalog_id: string;
   catalogName: string;
   description: string;
+}
+
+interface DashboardProps {
+  onJobUpdate?: (job: ActiveJob) => void;
+  onJobDelete?: (catalogId: string, jobId: string) => void;
 }
 
 interface SelectedCatalog {
@@ -63,29 +71,27 @@ enum DashboardView {
   UPLOAD_RESUMES
 }
 
-const Dashboard = () => {
+const Dashboard = ({ onJobDelete, onJobUpdate }: DashboardProps) => {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [uploadedResumes, setUploadedResumes] = useState<ResumeUploadResult[]>([]);
   const [activeJob, setActiveJob] = useState<ActiveJob | null>(null);
   const [selectedCatalog, setSelectedCatalog] = useState<SelectedCatalog | null>(null);
   const [view, setView] = useState<DashboardView>(DashboardView.UPLOAD_RESUMES);
+  const [isUploading, setIsUploading] = useState(false);
   const [jobForm, setJobForm] = useState({
     title: '',
     description: '',
     catalogId: '',
     catalogName: ''
   });
+  const { toast } = useToast();
 
   // Function to handle file uploads
   const handleFileUpload = async (files: FileList) => {
-    if (!activeJob) return;
-
-    const formData = new FormData();
-    Array.from(files).forEach(file => {
-      formData.append('files', file);
-    });
+    if (!activeJob || isUploading) return;
 
     try {
+      setIsUploading(true);
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 90) {
@@ -100,7 +106,22 @@ const Dashboard = () => {
       
       clearInterval(progressInterval);
       setUploadProgress(100);
-      setUploadedResumes(prev => [...prev, ...result.results]);
+
+      const newResumes: ResumeUploadResult[] = result.results.map((r: { id?: string; filename: string }) => ({
+        id: r.id || crypto.randomUUID(),
+        filename: r.filename,
+        analysisStatus: 'queued',
+        matchScore: 0
+      }));
+
+      setUploadedResumes(prev => [...prev, ...newResumes]);
+      
+      toast({
+        title: "Upload Successful",
+        description: `Successfully uploaded ${files.length} resume${files.length > 1 ? 's' : ''}`,
+        variant: "default",
+      
+      });
 
       setTimeout(() => {
         setUploadProgress(0);
@@ -108,7 +129,15 @@ const Dashboard = () => {
 
     } catch (error) {
       console.error('Failed to upload resumes:', error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload resumes. Please try again.",
+        variant: "destructive",
+        // icon: <XCircle className="h-4 w-4" />
+      });
       setUploadProgress(0);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -121,8 +150,7 @@ const Dashboard = () => {
         jobForm.description
       );
       
-      // Reset form and switch to upload view
-      setJobForm({ title: '', description: '', catalogId: '', catalogName: '' });
+      setJobForm({ title: '', description: '', catalogId: '', catalogName: ''});
       setActiveJob({
         id: job.id,
         title: job.title,
@@ -131,8 +159,21 @@ const Dashboard = () => {
         description: job.description
       });
       setView(DashboardView.UPLOAD_RESUMES);
+      
+      toast({
+        title: "Success",
+        description: "Job description created successfully",
+        variant: "default",
+        // icon: <CheckCircle className="h-4 w-4 text-green-500" />
+      });
     } catch (error) {
       console.error('Failed to create job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create job description",
+        variant: "destructive",
+        // icon: <XCircle className="h-4 w-4" />
+      });
     }
   };
 
@@ -142,8 +183,95 @@ const Dashboard = () => {
       setActiveJob(null);
       setUploadedResumes([]);
       setView(DashboardView.UPLOAD_RESUMES);
+      
+      toast({
+        title: "Catalog Deleted",
+        description: "Catalog has been removed successfully",
+        variant: "default",
+        // icon: <CheckCircle className="h-4 w-4 text-green-500" />
+      });
     }
   };
+
+// Updated handleDeleteJob function
+const handleDeleteJob = async (catalogId: string, jobId: string) => {
+  try {
+    await api.deleteJob(catalogId, jobId);
+    setActiveJob(null);
+    setUploadedResumes([]);
+    
+    // Update sidebar data
+    onJobDelete && onJobDelete(catalogId, jobId);
+    
+    toast({
+      title: "Job Deleted",
+      description: "Job has been removed successfully",
+      variant: "default",
+    });
+  } catch (error) {
+    console.error('Failed to delete job:', error);
+    toast({
+      title: "Error",
+      description: "Failed to delete job",
+      variant: "destructive",
+    });
+  }
+};
+  
+ 
+  const handleUpdateJob = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeJob) return;
+  
+    try {
+      const job = await api.updateJob(
+        activeJob.catalog_id,
+        activeJob.id,
+        {
+          title: jobForm.title,
+          description: jobForm.description
+        }
+      );
+      
+      // Update active job
+      const updatedJob = {
+        id: job.id,
+        title: job.title,
+        catalog_id: job.catalog_id,
+        catalogName: selectedCatalog?.name || '',
+        description: job.description
+      };
+      
+      setActiveJob(updatedJob);
+      
+      // Reset form
+      setJobForm({ 
+        title: '', 
+        description: '', 
+        catalogId: '', 
+        catalogName: ''
+      });
+      
+      setView(DashboardView.UPLOAD_RESUMES);
+      
+      // Update sidebar data
+      onJobUpdate && onJobUpdate(updatedJob);
+      
+      toast({
+        title: "Success",
+        description: "Job description updated successfully",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Failed to update job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update job description",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   const renderBreadcrumb = () => {
     if (!selectedCatalog && !activeJob && view !== DashboardView.CREATE_JOB) {
@@ -161,11 +289,14 @@ const Dashboard = () => {
         {selectedCatalog && (
           <>
             <BreadcrumbItem className="hidden md:block">
-              <BreadcrumbLink href="#" onClick={(e) => {
-                e.preventDefault();
-                setActiveJob(null);
-                setView(DashboardView.UPLOAD_RESUMES);
-              }}>
+              <BreadcrumbLink 
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveJob(null);
+                  setView(DashboardView.UPLOAD_RESUMES);
+                }}
+              >
                 {selectedCatalog.name}
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -175,7 +306,7 @@ const Dashboard = () => {
                 <BreadcrumbItem>
                   <BreadcrumbPage>
                     {view === DashboardView.CREATE_JOB 
-                      ? 'New Job Description' 
+                      ? jobForm.title ? 'Update Job Description' : 'New Job Description'
                       : activeJob?.title}
                   </BreadcrumbPage>
                 </BreadcrumbItem>
@@ -191,8 +322,17 @@ const Dashboard = () => {
     if (view === DashboardView.CREATE_JOB) {
       return (
         <Card className="max-w-4xl mx-auto p-6">
-          <h2 className="text-2xl font-semibold mb-6">Create New Job Description</h2>
-          <form onSubmit={handleCreateJob} className="space-y-6">
+          <h2 className="text-2xl font-semibold mb-6">
+            {activeJob?.id == null || activeJob?.id == '' ? 'Create New Job Description' : 'Update Job Description' }
+          </h2>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (activeJob?.id == null || activeJob?.id == '') {
+              handleCreateJob(e);
+            } else {
+              handleUpdateJob(e);
+            }
+          }} className="space-y-6">
             <div>
               <label className="text-sm font-medium mb-2 block">Job Title</label>
               <Input
@@ -213,10 +353,10 @@ const Dashboard = () => {
               />
             </div>
             <div className="flex gap-4">
-              <Button type="submit" className="flex-1">
-                Create Job
-              </Button>
-              <Button 
+                <Button type="submit" className="flex-1">
+                  {activeJob?.id == null || activeJob?.id == '' ? 'Create Job' : 'Update Job'}
+                </Button>
+              <Button   
                 type="button" 
                 variant="outline"
                 onClick={() => {
@@ -251,6 +391,37 @@ const Dashboard = () => {
               <h2 className="text-2xl font-semibold">{activeJob.title}</h2>
               <p className="text-muted-foreground mt-1">Upload resumes for screening</p>
             </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem 
+                onClick={() => {
+                  // Set form values with current job data
+                  setJobForm({
+                    title: activeJob.title,
+                    description: activeJob.description,
+                    catalogId: activeJob.catalog_id,
+                    catalogName: activeJob.catalogName
+                  });
+                  setView(DashboardView.CREATE_JOB);
+                }}
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Update Description
+              </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => handleDeleteJob(activeJob.catalog_id, activeJob.id)}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Job
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <p className="text-muted-foreground mt-1">{activeJob.description}</p>
@@ -268,10 +439,14 @@ const Dashboard = () => {
               accept=".pdf,.doc,.docx"
               className="hidden"
               id="resume-upload"
+              disabled={isUploading}
             />
             <label 
               htmlFor="resume-upload"
-              className="cursor-pointer flex flex-col items-center"
+              className={cn(
+                "cursor-pointer flex flex-col items-center",
+                isUploading && "opacity-50 cursor-not-allowed"
+              )}
             >
               <UploadCloud className="h-12 w-12 text-primary mb-4" />
               <span className="text-muted-foreground">
@@ -302,8 +477,9 @@ const Dashboard = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Filename</TableHead>
+                    <TableHead>Resume Name</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Match Score</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -311,10 +487,25 @@ const Dashboard = () => {
                     <TableRow key={index}>
                       <TableCell>{resume.filename}</TableCell>
                       <TableCell>
-                        <span className={resume.status === 'success' 
-                          ? 'text-green-600' 
-                          : 'text-red-600'}>
-                          {resume.status}
+                        {resume.analysisStatus === 'completed' ? (
+                          <RouterLink 
+                            to={`/analysis/${resume.id}`}
+                            className="text-primary hover:underline"
+                          >
+                            Analysed
+                          </RouterLink>
+                        ) : (
+                          <span className="text-muted-foreground">Queued</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <span 
+                          className={cn(
+                            "font-medium",
+                            resume.matchScore >= 80 ? "text-green-600" : "text-red-600"
+                          )}
+                        >
+                          {resume.matchScore}%
                         </span>
                       </TableCell>
                     </TableRow>
@@ -364,6 +555,8 @@ const Dashboard = () => {
             setUploadedResumes([]);
           }}
           onCatalogDelete={handleCatalogDelete}
+          onJobUpdate={handleUpdateJob}
+          onJobDelete={handleDeleteJob}
         />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">

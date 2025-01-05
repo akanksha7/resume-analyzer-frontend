@@ -1,4 +1,4 @@
-export const mockPricingPlans = {
+export const plans = {
     monthly: [
       {
         id: "basic",

@@ -40,8 +40,8 @@ export const StripeButton: React.FC<StripeButtonProps> = ({ planId, className })
       <stripe-buy-button
         buy-button-id={stripeBuyButtonIds[planId as keyof typeof stripeBuyButtonIds] || stripeBuyButtonIds.basic}
         publishable-key="pk_test_51QPg5VH0gqnHYygLquXYNEodur6uMqMAUzYF4E8l6QQ7GIzfSxpCpXoTOgdYgHV2J8XrLsRa6Lk9qDTvZSBAk1DM00sEenteNt" // Replace with your Stripe publishable key
-        success-url="http://localhost:5177/success" // Replace with your success URL
-        cancel-url="http://localhost:5177/plans" // Replace with your cancel URL
+        success-url="https://www.google.com" // Replace with your success URL
+        cancel-url="http://localhost:5176/plans" // Replace with your cancel URL
       >
       </stripe-buy-button>
     </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { motion } from "framer-motion";
 import {
  Card,
@@ -12,18 +12,34 @@ import { Input } from "@/components/ui/input";
 import { InputOTPForm } from "@/components/input-otp-form";
 import { StripeButton } from "@/components/stripe-button";
 import { toast } from "@/components/hooks/use-toast";
-import { verifyEmail } from "@/services/api";
+import { registerEmail, verifyEmail } from "@/services/api";
+import { RegistrationContext } from '@/services/registrationContext';
+import { useNavigate } from "react-router-dom";
+import { Eye } from "lucide-react";
+import { EyeOff } from "lucide-react";
 
 export default function CheckoutPage() {
  const [email, setEmail] = useState("");
+ const [password, setPassword] = useState('');
+ const [showPassword, setShowPassword] = useState(false);
  const [isEmailVerified, setIsEmailVerified] = useState(false);
  const [otpVerified, setOtpVerified] = useState(false);
  const [isLoading, setIsLoading] = useState(false);
+ const navigate = useNavigate();
+ const context = useContext(RegistrationContext);
+
+ if (!context) throw new Error("Must be used within RegistrationProvider");
+ const { state: { plan } } = context;
+
+ if (!plan) {
+   navigate('/pricing');
+   return;
+ }
 
  const handleVerifyEmail = async () => {
    try {
      setIsLoading(true);
-     await verifyEmail(email);
+    //  await veri(email, password, plan.id);
      setIsEmailVerified(true);
      toast({
        title: "Success",
@@ -41,6 +57,28 @@ export default function CheckoutPage() {
    }
  };
 
+ const handleRegister = async () => {
+  try {
+    setIsLoading(true);
+    await registerEmail(email, password, plan.id);
+    await verifyEmail(email);
+    setIsEmailVerified(true);
+    toast({
+      title: "Success",
+      description: "Registration successful",
+      variant: "default",
+    });
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: error instanceof Error ? error.message : "Registration failed",
+      variant: "destructive",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
  return (
    <motion.div
      initial={{ opacity: 0 }}
@@ -53,7 +91,7 @@ export default function CheckoutPage() {
            Secure Checkout
          </CardTitle>
          <CardDescription className="text-foreground-muted">
-           Complete verification to proceed with payment
+           Complete registration to proceed with payment
          </CardDescription>
        </CardHeader>
 
@@ -78,14 +116,53 @@ export default function CheckoutPage() {
                         focus:border-primary focus:ring-1 focus:ring-primary"
                />
              </div>
+             <div className="grid gap-2">
+             <label htmlFor="password" className="text-foreground">Password</label>
+             <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-background-tertiary border-border/40 pr-10"
+                  required
+                  disabled={isLoading}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                  )}
+                  <span className="sr-only">
+                    {showPassword ? 'Hide password' : 'Show password'}
+                  </span>
+                </Button>
+              </div>
+            </div>
              <Button
+               onClick={handleRegister}
+               disabled={isLoading || !email || !password}
+               className="w-full bg-primary hover:bg-primary-hover active:bg-primary-active 
+                      text-primary-foreground shadow-lg transition-all duration-200"
+             >
+               {isLoading ? "Registering..." : "Register"}
+             </Button>
+             {/* <Button
                onClick={handleVerifyEmail}
                disabled={isLoading || !email}
                className="w-full bg-primary hover:bg-primary-hover active:bg-primary-active 
                       text-primary-foreground shadow-lg transition-all duration-200"
              >
                {isLoading ? "Sending..." : "Verify Email"}
-             </Button>
+             </Button> */}
            </motion.div>
          )}
 

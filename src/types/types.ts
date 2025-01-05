@@ -16,8 +16,10 @@ export interface JobDescription {
 }
 
 export interface ResumeUploadResult {
+  id: string;
   filename: string;
-  status: string;
+  analysisStatus: 'queued' | 'completed';
+  matchScore: number;
 }
 
 export interface ActiveJob {
@@ -25,4 +27,14 @@ export interface ActiveJob {
   title: string;
   catalog_id: string;
   catalogName: string;
+}
+
+export interface Plan {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  billingPeriod: "monthly" | "yearly";
+  features: { name: string; included: boolean; }[];
+  popular?: boolean;
 }

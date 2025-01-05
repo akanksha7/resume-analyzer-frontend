@@ -9,6 +9,7 @@ import DashboardPage from './pages/DashboardPage';
 import ResumeAnalysisPage from './pages/ResumeAnalysisPage';
 import './index.css';
 import { LoadingSpinner } from './components/loading-spinner';
+import { RegistrationProvider } from './services/registrationContext';
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -54,13 +55,23 @@ function AppRoutes() {
           </PublicRoute>
         } 
       />
-      <Route path="/plans" element={<PricingPage />} />
+      
+      <Route path="/plans" element={
+         <PublicRoute>
+          <RegistrationProvider>
+            <PricingPage />
+          </RegistrationProvider>
+        </PublicRoute>
+      } />
       <Route 
         path="/checkout/:planId" 
         element={
-          <ProtectedRoute>
-            <CheckoutPage />
-          </ProtectedRoute>
+          <PublicRoute>
+            <RegistrationProvider>
+              <CheckoutPage />
+            </RegistrationProvider>
+           
+          </PublicRoute>
         } 
       />
       <Route 
