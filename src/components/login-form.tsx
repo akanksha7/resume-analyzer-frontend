@@ -1,60 +1,50 @@
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "@/services/authContext";
+import { useToast } from "@/components/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/services/authContext';
-import { Eye, EyeOff } from 'lucide-react'; 
-import { toast } from "./hooks/use-toast";
-import { api } from "@/services/api";
-import { LoginResponse } from "@/types/auth";
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Eye, EyeOff } from 'lucide-react';
 
 export function LoginForm() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { error } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const { login } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
     try {
       setIsLoading(true);
-      const response: LoginResponse = await api.login({ email, password });
-  
-        if (!response.user.email_verified) {
-          // User needs to verify email
-          navigate('/verify-otp', { 
-            state: { email }  
-          });
-          return;
-        }
-  
-        if (!response.user.is_active_plan) {
-          // User needs to complete payment
-          navigate('/plans', { state: { isAuthenticated: true } });
-          return;
-        }
-
-        // User is verified and has paid
-        if (response.user.email_verified && response.user.is_active_plan) {
-          navigate('/dashboard', { state: { isAuthenticated: true, user: response.user } });
-          return;
-        }
+      const response = await login({ email, password });
       
-    } catch (error: any) {
+      if (response.user.email_verified && response.user.is_active_plan) {
+        navigate('/dashboard', { replace: true });
+      } else if (!response.user.email_verified) {
+        navigate('/verify-otp', { 
+          replace: true,
+          state: { email: response.user.email } 
+        });
+      } else {
+        navigate('/plans', { replace: true });
+      }
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Registration failed, Try again later",
+        description: "Invalid credentials",
         variant: "destructive",
       });
     } finally {
@@ -74,19 +64,12 @@ export function LoginForm() {
       <CardContent>
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col gap-6">
-            {error && (
-              <div className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-            
             <div className="grid gap-2">
               <Label htmlFor="email" className="text-foreground">Email</Label>
               <Input
                 id="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                name="email"
                 placeholder="name@example.com"
                 className="bg-background-tertiary border-border/40"
                 required
@@ -108,8 +91,8 @@ export function LoginForm() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  name="password"
+                  placeholder="Enter your password"
                   className="bg-background-tertiary border-border/40 pr-10"
                   required
                   disabled={isLoading}

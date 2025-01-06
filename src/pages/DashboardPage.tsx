@@ -1,5 +1,5 @@
 // pages/DashboardPage.tsx
-import { useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { AppSidebar } from "@/components/app-sidebar"
 import {
   Breadcrumb,
@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { MoreHorizontal, Pencil, Trash2, UploadCloud } from "lucide-react"
 import {
   Table,
@@ -40,6 +40,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { useToast } from "@/components/hooks/use-toast";
+import CollapsibleDescription from '@/components/ui/collapsible-description';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Play, FileText } from "lucide-react";
+import { describe } from 'node:test';
 
 interface ResumeUploadResult {
   id: string;
@@ -71,6 +75,20 @@ enum DashboardView {
   UPLOAD_RESUMES
 }
 
+interface ResumeAnalysis {
+  id: string;
+  match_score: number;
+  created_at: string;
+}
+
+interface Resume {
+  id: string;
+  filename: string;
+  analysis?: ResumeAnalysis;
+  analysisStatus: 'queued' | 'completed';
+  matchScore: number;
+}
+
 const Dashboard = ({ onJobDelete, onJobUpdate }: DashboardProps) => {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [uploadedResumes, setUploadedResumes] = useState<ResumeUploadResult[]>([]);
@@ -85,9 +103,76 @@ const Dashboard = ({ onJobDelete, onJobUpdate }: DashboardProps) => {
     catalogName: ''
   });
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const [isLoadingResumes, setIsLoadingResumes] = useState(false);
+  const [selectedResumes, setSelectedResumes] = useState<string[]>([]);
+  const isAllSelected = useMemo(() => 
+    uploadedResumes.length > 0 && selectedResumes.length === uploadedResumes.length,
+    [uploadedResumes.length, selectedResumes.length]
+  );
+
+
+  const handleAnalyzeSelected = async () => {
+    if (!activeJob?.id || selectedResumes.length === 0) return;
+  
+    try {
+      await api.analyzeBatchResumes(activeJob.id, selectedResumes);
+      
+      // Update the status of selected resumes to 'queued'
+      setUploadedResumes(prevResumes => 
+        prevResumes.map(resume => ({
+          ...resume,
+          analysisStatus: selectedResumes.includes(resume.id) ? 'queued' : resume.analysisStatus,
+          matchScore: selectedResumes.includes(resume.id) ? 0 : resume.matchScore
+        }))
+      );
+      
+      // Clear selection after starting analysis
+      setSelectedResumes([]);
+      
+      toast({
+        title: "Analysis Started",
+        description: `Started analysis for ${selectedResumes.length} resume(s)`,
+      });
+    } catch (error) {
+      console.error('Failed to start analysis:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start analysis. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleViewAnalysis = (resumeId: string) => {
+    navigate(`/analysis/${resumeId}`);
+  };
+
+  const handleDeleteResume = async (resumeId: string) => {
+    try {
+      // Implement your delete logic here
+      setUploadedResumes(prevResumes => 
+        prevResumes.filter(resume => resume.id !== resumeId)
+      );
+      setSelectedResumes(prev => prev.filter(id => id !== resumeId));
+      
+      toast({
+        title: "Resume Deleted",
+        description: "Resume has been removed successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete resume",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Function to handle file uploads
   const handleFileUpload = async (files: FileList) => {
+
     if (!activeJob || isUploading) return;
 
     try {
@@ -272,6 +357,40 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
     }
   };
 
+  useEffect(() => {
+    const fetchExistingResumes = async () => {
+      if (!activeJob?.catalog_id) return;
+      
+      setIsLoadingResumes(true);
+      try {
+        // Fetch resumes with job_description_id for analysis
+        const response = await api.getResumes(activeJob.catalog_id, activeJob.id);
+        
+        // Transform the data with analysis if it exists
+        const resumesWithAnalysis = response.items.map((resume: any) => ({
+          id: resume.id,
+          filename: resume.filename,
+          created_at: resume.created_at,
+          analysisStatus: resume.analysis ? 'completed' : 'queued',
+          matchScore: resume.analysis ? resume.analysis.score : 0
+        }));
+  
+        setUploadedResumes(resumesWithAnalysis);
+      } catch (error) {
+        console.error('Failed to fetch resumes:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load existing resumes",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingResumes(false);
+      }
+    };
+  
+    fetchExistingResumes();
+  }, [activeJob?.catalog_id, activeJob?.id]);
+
 
   const renderBreadcrumb = () => {
     if (!selectedCatalog && !activeJob && view !== DashboardView.CREATE_JOB) {
@@ -389,7 +508,7 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-2xl font-semibold">{activeJob.title}</h2>
-              <p className="text-muted-foreground mt-1">Upload resumes for screening</p>
+              <p className="text-muted-foreground mt-1">Job Description</p>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -424,7 +543,11 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
             </DropdownMenu>
           </div>
 
-          <p className="text-muted-foreground mt-1">{activeJob.description}</p>
+          {/* <p className="text-muted-foreground mt-1">{activeJob.description}</p> */}
+          <CollapsibleDescription 
+            description={activeJob.description}
+            isUploadingActive={isUploading || uploadProgress > 0}
+          />
 
           {/* Resume Upload Section */}
           <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
@@ -471,42 +594,127 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
           )}
 
           {/* Uploaded Resumes Table */}
-          {uploadedResumes.length > 0 && (
+          {/* {uploadedResumes.length > 0 && (
             <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-4">Uploaded Resumes</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Uploaded Resumes</h3>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handleAnalyzeSelected()}
+                    disabled={selectedResumes.length === 0}
+                    className="flex items-center"
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    Analyze Selected ({selectedResumes.length})
+                  </Button>
+                </div>
+              </div> */}
+              {uploadedResumes.length > 0 && (
+                <div className="mt-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold">
+                      Uploaded Resumes
+                      {isLoadingResumes && (
+                        <span className="ml-2 text-muted-foreground text-sm font-normal">
+                          Loading...
+                        </span>
+                      )}
+                    </h3>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => handleAnalyzeSelected()}
+                        disabled={selectedResumes.length === 0 || isLoadingResumes}
+                        className="flex items-center"
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        Analyze Selected ({selectedResumes.length})
+                      </Button>
+                    </div>
+                  </div>
+              
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={isAllSelected}
+                        onCheckedChange={(checked) => {
+                          setSelectedResumes(checked 
+                            ? uploadedResumes.map(r => r.id)
+                            : []
+                          );
+                        }}
+                      />
+                    </TableHead>
                     <TableHead>Resume Name</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Match Score</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {uploadedResumes.map((resume, index) => (
-                    <TableRow key={index}>
+                  {uploadedResumes.map((resume) => (
+                    <TableRow key={resume.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedResumes.includes(resume.id)}
+                          onCheckedChange={(checked) => {
+                            setSelectedResumes(checked
+                              ? [...selectedResumes, resume.id]
+                              : selectedResumes.filter(id => id !== resume.id)
+                            );
+                          }}
+                        />
+                      </TableCell>
                       <TableCell>{resume.filename}</TableCell>
                       <TableCell>
                         {resume.analysisStatus === 'completed' ? (
-                          <RouterLink 
-                            to={`/analysis/${resume.id}`}
-                            className="text-primary hover:underline"
-                          >
-                            Analysed
-                          </RouterLink>
+                          <span className="text-green-600 font-medium">Analyzed</span>
                         ) : (
                           <span className="text-muted-foreground">Queued</span>
                         )}
                       </TableCell>
                       <TableCell>
-                        <span 
-                          className={cn(
-                            "font-medium",
-                            resume.matchScore >= 80 ? "text-green-600" : "text-red-600"
-                          )}
-                        >
-                          {resume.matchScore}%
+                        <span className={cn(
+                          "font-medium",
+                          resume.analysisStatus === 'completed' 
+                            ? resume.matchScore >= 80 
+                              ? "text-green-600" 
+                              : "text-red-600"
+                            : "text-muted-foreground"
+                        )}>
+                          {resume.analysisStatus === 'completed' ? `${resume.matchScore}%` : '-'}
                         </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          {resume.analysisStatus === 'completed' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/resume-analysis/${resume.id}`, {
+                                state: { 
+                                  jobId: activeJob?.id,
+                                  catalogId: activeJob?.catalog_id,
+                                  resumeId: resume.id
+                                }
+                              })}
+                            >
+                              <FileText className="h-4 w-4 mr-2" />
+                              View Analysis
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteResume(resume.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

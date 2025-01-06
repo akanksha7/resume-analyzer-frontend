@@ -29,15 +29,25 @@ export interface ActiveJob {
   catalogName: string;
 }
 
-export interface Plan {
-  id: string;
+export interface Feature {
   name: string;
-  price: number;
+  included: boolean;
+}
+
+export interface Plan {
+  plan_type: string;
+  plan_id: string;
   description: string;
-  analysisCount: number;
-  features: {
-    name: string;
-    included: boolean;
-  }[];
-  popular?: boolean;
+  price: number;
+  perResumeAnalysis: number;
+  features: Feature[];
+  max_resumes: number;
+  max_catalogs: number;
+  max_job_descriptions_per_catalog: number;
+}
+
+export interface Resume {
+  id: string;
+  filename: string;
+  created_at: string;
 }

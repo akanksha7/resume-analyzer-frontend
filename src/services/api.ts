@@ -63,6 +63,24 @@ export const api = {
     });
     return response.json();
   },
+
+  getResumes: async (catalogId: string, jobDescriptionId: string) => {
+    const response = await fetch(
+      `${API_BASE_URL}/api/catalogs/${catalogId}/resumes?job_description_id=${jobDescriptionId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+      }
+    );
+  
+    if (!response.ok) {
+      throw new Error('Failed to fetch resumes');
+    }
+  
+    return response.json();
+  },
+  
   createCatalog: async (name: string, description: string) => {
     const response = await fetch(`${API_BASE_URL}/api/catalogs`, {
       method: 'POST',
@@ -154,15 +172,77 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/api/plans`);
     return response.json();
   },
-  getMe: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+  // getMe: async () => {
+  //   const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+  //     headers: {
+  //       'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+  //     }
+  //   });
+
+  //   if (!response.ok) {
+  //     throw new Error('Failed to fetch user data');
+  //   }
+
+  //   return response.json();
+  //   return Promise.resolve(response);
+  // },
+  analyzeBatchResumes: async (jobDescriptionId: string, resumeIds: string[]) => {
+    const response = await fetch(`${API_BASE_URL}/api/analyze/batch`, {
+      method: 'POST',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-      }
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        job_description_id: jobDescriptionId,
+        resume_ids: resumeIds
+      }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch user data');
+      throw new Error('Failed to start batch analysis');
+    }
+
+    return response.json();
+  },
+  getResumeAnalysis: async (resumeId: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/resumes/${resumeId}/analysis`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch resume analysis');
+    }
+
+    return response.json();
+  },
+  deleteResume: async (catalog_id: string, resume_id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/catalogs/${catalog_id}/resumes/${resume_id} `, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete resume');
+    }
+
+    return response.json();
+  },
+  refreshToken: async (refresh_token: string): Promise<LoginResponse> => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refresh_token }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to refresh token');
     }
 
     return response.json();

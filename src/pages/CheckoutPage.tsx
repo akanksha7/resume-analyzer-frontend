@@ -220,7 +220,6 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { planId } = location.state || {};
-  debugger;
   if (!planId) {
     navigate('/plans');
     return null;

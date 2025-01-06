@@ -1,114 +1,56 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { useLocation, useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { InputOTPForm } from "@/components/input-otp-form";
-import { toast } from "@/components/hooks/use-toast";
-import { verifyEmail, verifyOTP } from "@/services/api";
+import { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/services/authContext';
+import { InputOTPForm } from '@/components/input-otp-form';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function VerifyEmailPage() {
-  const [isLoading, setIsLoading] = useState(false);
+export default function VerifyOtpPage() {
+  const { isAuthenticated, user, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email;
 
-  // Redirect if no email provided
-  if (!email) {
-    navigate('/register');
+  useEffect(() => {
+    if (!isLoading) {
+      // If user is verified, redirect to appropriate page
+      if (isAuthenticated && user?.email_verified) {
+        navigate(user.is_active_plan ? '/dashboard' : '/plans', { replace: true });
+        return;
+      }
+
+      // If not authenticated or no email, go back to login
+      if (!isAuthenticated || !email) {
+        navigate('/login', { replace: true });
+      }
+    }
+  }, [isLoading, isAuthenticated, user, email, navigate]);
+
+  if (isLoading || !email) {
     return null;
   }
 
-  // async function onSubmit(otp: string) {
-  //   try {
-  //     setIsLoading(true);
-  //     await verifyOTP(email, otp);
-      
-  //     toast({
-  //       title: "Success",
-  //       description: "Email verified successfully",
-  //       variant: "default",
-  //     });
-
-  //     navigate('/plans');
-  //   } catch (error) {
-  //     toast({
-  //       title: "Error",
-  //       description: "Verification failed. Please try again.",
-  //       variant: "destructive",
-  //     });
-  //     throw error; // Re-throw to be handled by the form
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // }
-
-  const handleResendCode = async () => {
-    try {
-      setIsLoading(true);
-      await verifyEmail(email);
-      toast({
-        title: "Success",
-        description: "Verification code resent",
-        variant: "default",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to resend code",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="min-h-screen bg-background flex items-center justify-center p-4"
-    >
-      <Card className="w-full max-w-md bg-background-secondary border-border shadow-2xl">
-        <CardHeader className="space-y-3">
-          <CardTitle className="text-foreground text-2xl font-bold">
-            Verify Your Email
-          </CardTitle>
-          <CardDescription className="text-foreground-muted">
-            Enter the verification code sent to {email}
-          </CardDescription>
-        </CardHeader>
+    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+      <div className="w-full max-w-sm space-y-6">
+        <div className="space-y-2 text-center">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl font-semibold tracking-tight">
+                Verify your email
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                We've sent a verification code to {email}
 
-        <CardContent className="space-y-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
-            <InputOTPForm 
-              email={email} 
-            />
-          </motion.div>
-
-          <div className="pt-6 border-t border-border">
-            <p className="text-center text-foreground-subtle text-sm">
-              Didn't receive the code?{" "}
-              <button 
-                className="text-primary hover:text-primary-hover"
-                onClick={handleResendCode}
-                disabled={isLoading}
-              >
-                Resend
-              </button>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+              </p>
+            </CardHeader>
+            <CardContent>
+              
+              <InputOTPForm email={email} />
+            </CardContent>
+          </Card>
+        </div>
+       
+      </div>
+    </div>
   );
 }
