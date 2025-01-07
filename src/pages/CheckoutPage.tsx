@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Card,
@@ -11,33 +11,93 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   EmbeddedCheckoutProvider,
-  EmbeddedCheckout
+  EmbeddedCheckout,
 } from '@stripe/react-stripe-js';
 import { api } from "@/services/api";
+import { Loader2 } from "lucide-react";
 
-// Initialize Stripe outside component
-//const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+// Initialize Stripe outside component with public key
+const stripePromise = loadStripe(
+  "pk_test_51QPg5VH0gqnHYygLquXYNEodur6uMqMAUzYF4E8l6QQ7GIzfSxpCpXoTOgdYgHV2J8XrLsRa6Lk9qDTvZSBAk1DM00sEenteNt"
+);
+
+interface LocationState {
+  planId: string;
+}
+
+interface CheckoutResponse {
+  client_secret: string;
+  session_id: string;
+}
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { planId } = location.state || {};
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [checkoutData, setCheckoutData] = useState<CheckoutResponse | null>(null);
+  
+  // Type assertion for location.state
+  const { planId } = (location.state as LocationState) || {};
 
-  if (!planId) {
-    navigate('/plans');
-    return null;
+  // Create checkout session on mount
+  useEffect(() => {
+    const initializeCheckout = async () => {
+      if (!planId) {
+        navigate('/plans', { replace: true });
+        return;
+      }
+
+      try {
+        setError(null);
+        const response = await api.createCheckoutSession(planId);
+        console.log('Checkout session response:', response); // Debug log
+        
+        if (!response?.client_secret) {
+          throw new Error('No client secret received');
+        }
+
+        setCheckoutData(response);
+      } catch (error) {
+        console.error('Failed to create checkout session:', error);
+        setError('Failed to initialize checkout. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeCheckout();
+  }, [planId, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
-  const fetchClientSecret = useCallback(async () => {
-    try {
-      const response = await api.createCheckoutSession(planId);
-      return response.clientSecret;
-    } catch (error) {
-      console.error('Failed to create checkout session:', error);
-      navigate('/plans');
-      return null;
-    }
-  }, [planId, navigate]);
+  if (error || !checkoutData?.client_secret) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-screen bg-background flex items-center justify-center p-4"
+      >
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center space-y-4">
+            <p className="text-red-500">{error || 'Unable to initialize checkout'}</p>
+            <button
+              onClick={() => navigate('/plans')}
+              className="text-primary hover:underline"
+            >
+              Return to Plans
+            </button>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -55,16 +115,18 @@ export default function CheckoutPage() {
           </CardDescription>
         </CardHeader>
 
-        <CardContent>
-          <div id="checkout" className="min-h-[500px] w-full">
-            {/* <EmbeddedCheckoutProvider
-              // stripe={stripePromise}
-              options={{ fetchClientSecret }}
-            > */}
-              {/* <EmbeddedCheckout 
-                className="min-h-[500px] w-full" 
+        <CardContent className="min-h-[500px]">
+          <div id="checkout" className="w-full h-full">
+            <EmbeddedCheckoutProvider
+              stripe={stripePromise}
+              options={{
+                clientSecret: checkoutData.client_secret,
+              }}
+            > 
+              <EmbeddedCheckout 
+                className="w-full h-full" 
               />
-            </EmbeddedCheckoutProvider> */}
+            </EmbeddedCheckoutProvider>
           </div>
         </CardContent>
       </Card>

@@ -236,13 +236,15 @@ export const api = {
   },
 
   createCheckoutSession: async (planId: string) => {
-    const response = await fetch(`${API_BASE_URL}/api/create-checkout-session`, {
+    const response = await fetch(`${API_BASE_URL}/api/payment/create-checkout-session`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
       },
-      body: JSON.stringify({ plan_id: planId }),
+      body: JSON.stringify({ plan_id: planId,
+        quantity: 1
+       }),
     });
 
     if (!response.ok) {
@@ -253,7 +255,7 @@ export const api = {
   },
 
   getCheckoutSession: async (sessionId: string) => {
-    const response = await fetch(`${API_BASE_URL}/api/session-status?session_id=${sessionId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/payment/session-status?session_id=${sessionId}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
       },

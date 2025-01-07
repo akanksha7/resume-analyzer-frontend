@@ -7,7 +7,7 @@ import RegisterPage from './pages/RegisterPage';
 import VerifyOtpPage from './pages/VerifyOtpPage';
 import PricingPage from './pages/PricingPage';
 import CheckoutPage from './pages/CheckoutPage';
-import SuccessPage from './pages/SuccessPage';
+import ReturnPage from './pages/ReturnPage';
 import DashboardPage from './pages/DashboardPage';
 import ResumeAnalysisPage from './pages/ResumeAnalysisPage';
 import LandingPage from './pages/LandingPage';
@@ -97,7 +97,7 @@ function AppRoutes() {
       <Route path="/checkout/:planId" element={<CheckoutPage />} />
       
       {/* Protected routes */}
-      <Route path="/success" element={<ProtectedRoute><SuccessPage /></ProtectedRoute>} />
+      <Route path="/success" element={<ProtectedRoute><ReturnPage /></ProtectedRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/resume-analysis" element={<ProtectedRoute><ResumeAnalysisPage /></ProtectedRoute>} />
       
