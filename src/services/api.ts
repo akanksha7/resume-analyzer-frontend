@@ -225,7 +225,7 @@ export const api = {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ refresh_token }),
+      body: JSON.stringify({ refresh_token: refresh_token }),
     });
 
     if (!response.ok) {
@@ -242,7 +242,7 @@ export const api = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
       },
-      body: JSON.stringify({ planId }),
+      body: JSON.stringify({ plan_id: planId }),
     });
 
     if (!response.ok) {

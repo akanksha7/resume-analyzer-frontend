@@ -2,9 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from '@/services/authContext';
 import { Toaster } from '@/components/ui/toaster';
 import { LoadingSpinner } from '@/components/loading-spinner';
-
-// Pages
-import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import VerifyOtpPage from './pages/VerifyOtpPage';
@@ -13,6 +10,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import SuccessPage from './pages/SuccessPage';
 import DashboardPage from './pages/DashboardPage';
 import ResumeAnalysisPage from './pages/ResumeAnalysisPage';
+import LandingPage from './pages/LandingPage';
 
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {

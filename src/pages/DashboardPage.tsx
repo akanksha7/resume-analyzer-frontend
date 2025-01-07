@@ -554,23 +554,7 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
               id="resume-upload"
               disabled={isUploading}
             />
-            {/* <label 
-              htmlFor="resume-upload"
-              className={cn(
-                "cursor-pointer flex flex-col items-center",
-                isUploading && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              <UploadCloud className="h-12 w-12 text-primary mb-4" />
-              <span className="text-muted-foreground">
-                Upload Resumes (PDF, DOC, DOCX)
-              </span>
-              {uploadedResumes.length > 0 && (
-                <span className="text-sm text-primary mt-2">
-                  {uploadedResumes.length} files uploaded
-                </span>
-              )}
-            </label> */}
+
             <label 
               htmlFor="resume-upload"
               className={cn(

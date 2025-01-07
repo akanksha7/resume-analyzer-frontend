@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { verifyOTP } from "@/services/api";
+import { useAuth } from "@/services/authContext";
 
 const FormSchema = z.object({
  pin: z.string().length(6, {
@@ -33,6 +34,7 @@ export function InputOTPForm({ email }: InputOTPFormProps) {
   debugger;
  const [isVerifying, setIsVerifying] = useState(false);
  const navigate = useNavigate();
+ const { checkAuth } = useAuth();
  const form = useForm<z.infer<typeof FormSchema>>({
    resolver: zodResolver(FormSchema),
    defaultValues: {
@@ -46,6 +48,8 @@ export function InputOTPForm({ email }: InputOTPFormProps) {
   try {
     setIsVerifying(true);
     await verifyOTP(email, data.pin);
+
+    checkAuth();
     navigate('/plans');
     toast({
       title: "Success",
