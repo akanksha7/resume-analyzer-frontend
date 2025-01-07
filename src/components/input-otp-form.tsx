@@ -31,10 +31,10 @@ interface InputOTPFormProps {
 }
 
 export function InputOTPForm({ email }: InputOTPFormProps) {
-  debugger;
+
  const [isVerifying, setIsVerifying] = useState(false);
  const navigate = useNavigate();
- const { checkAuth } = useAuth();
+ const { refreshAccessToken } = useAuth();
  const form = useForm<z.infer<typeof FormSchema>>({
    resolver: zodResolver(FormSchema),
    defaultValues: {
@@ -49,7 +49,7 @@ export function InputOTPForm({ email }: InputOTPFormProps) {
     setIsVerifying(true);
     await verifyOTP(email, data.pin);
 
-    checkAuth();
+    refreshAccessToken();
     navigate('/plans');
     toast({
       title: "Success",

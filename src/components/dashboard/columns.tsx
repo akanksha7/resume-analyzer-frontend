@@ -1,15 +1,48 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowUpDown, FileText, Trash2 } from "lucide-react"
+import { ArrowUpDown, ExternalLink, FileText, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import * as Dialog from '@radix-ui/react-dialog';
+import { useState } from "react"
 
 interface ResumeData {
   id: string;
   filename: string;
+  s3_url: string;
   analysisStatus: 'queued' | 'completed';
   matchScore: number;
 }
+
+interface ResumeViewerProps {
+  url: string;
+  filename: string;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const ResumeViewer: React.FC<ResumeViewerProps> = ({ url, filename, isOpen, onClose }) => {
+  return (
+    <Dialog.Root open={isOpen} onOpenChange={onClose}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-black/50" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[90vh] bg-background rounded-lg shadow-lg flex flex-col">
+          <div className="flex justify-between items-center p-4 border-b">
+            <Dialog.Title className="text-lg font-semibold">{filename}</Dialog.Title>
+            <Button variant="ghost" size="sm" onClick={onClose}>×</Button>
+          </div>
+          <div className="flex-1 p-4">
+            <iframe 
+              src={url} 
+              className="w-full h-full rounded border"
+              title={filename}
+            />
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+};
 
 export const columns: ColumnDef<ResumeData>[] = [
   {
@@ -42,9 +75,29 @@ export const columns: ColumnDef<ResumeData>[] = [
     header: ({ column }) => (
       <div className="pl-4">Resume</div>
     ),
-    cell: ({ row }) => (
-      <div className="pl-4 font-medium">{row.getValue("filename")}</div>
-    ),
+    cell: ({ row, table }) => {
+      const [isViewerOpen, setIsViewerOpen] = useState(false);
+      return (
+        <div className="pl-4 font-medium group flex items-center gap-2">
+          <Button
+            variant="link"
+            className="p-0 h-auto font-medium"
+            onClick={() => setIsViewerOpen(true)}
+          >
+            <span className="truncate hover:underline" title={row.getValue("filename")}>
+              {row.getValue("filename")}
+            </span>
+            <ExternalLink className="w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </Button>
+          <ResumeViewer
+            url={row.original.s3_url}
+            filename={row.getValue("filename")}
+            isOpen={isViewerOpen}
+            onClose={() => setIsViewerOpen(false)}
+          />
+        </div>
+      );
+    },
   },
   {
     accessorKey: "analysisStatus",

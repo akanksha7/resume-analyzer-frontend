@@ -11,10 +11,9 @@ import ReturnPage from './pages/ReturnPage';
 import DashboardPage from './pages/DashboardPage';
 import ResumeAnalysisPage from './pages/ResumeAnalysisPage';
 import LandingPage from './pages/LandingPage';
-
+import UsageDashboard from './pages/UsageDashboard';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  debugger;
   const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
@@ -36,29 +35,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading, user } = useAuth();
 
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
-  if (isAuthenticated && user) {
-    if (!user.email_verified) {
-      return <Navigate to="/verify-otp" replace />;
-    }
-
-    if (!user.is_active_plan) {
-      return <Navigate to="/plans" replace />;
-    }
-
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return <>{children}</>;
-}
 function VerifyOTPRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth();
+  
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -66,6 +46,7 @@ function VerifyOTPRoute({ children }: { children: React.ReactNode }) {
 
   // Redirect to login if not authenticated
   if (!isAuthenticated || !user?.email) {
+    debugger;
     return <Navigate to="/login" replace />;
   }
 
@@ -77,13 +58,51 @@ function VerifyOTPRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function ReturnPageRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!user?.email_verified) {
+    return <Navigate to="/verify-otp" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+// function ReturnPageRoute({ children }: { children: React.ReactNode }) {
+//   const { isAuthenticated, isLoading, user } = useAuth();
+
+//   if (isLoading) {
+//     return <LoadingSpinner />;
+//   }
+
+//   // Redirect to login if not authenticated
+//   if (!isAuthenticated || !user?.email) {
+//     return <Navigate to="/login" replace />;
+//   }
+
+//   // If already verified, redirect to appropriate page
+//   if (user.email_verified) {
+//     return <Navigate to={user.is_active_plan ? '/dashboard' : '/plans'} replace />;
+//   }
+
+//   return <>{children}</>;
+// }
+
 function AppRoutes() {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-      <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+      <Route path="/" element={<LandingPage />}/>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
       
       {/* Verification route with special protection */}
       <Route path="/verify-otp" element={
@@ -91,16 +110,20 @@ function AppRoutes() {
           <VerifyOtpPage />
         </VerifyOTPRoute>
       } />
-      
-      {/* Semi-protected routes */}
       <Route path="/plans" element={<PricingPage />} />
       <Route path="/checkout/:planId" element={<CheckoutPage />} />
       
       {/* Protected routes */}
-      <Route path="/success" element={<ProtectedRoute><ReturnPage /></ProtectedRoute>} />
+      <Route path="/success" element={<ReturnPage />} />
+      {/* Protected routes */}
+      <Route path="/return" element={
+        <ReturnPageRoute>
+          <ReturnPage />
+        </ReturnPageRoute>
+      } />
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/resume-analysis" element={<ProtectedRoute><ResumeAnalysisPage /></ProtectedRoute>} />
-      
+      <Route path="/usage" element={<ProtectedRoute><UsageDashboard /></ProtectedRoute>} />
       {/* Fallback route */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

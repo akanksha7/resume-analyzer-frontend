@@ -17,6 +17,7 @@ interface AuthContextType extends Omit<AuthState, 'error'> {
   logout: () => void;
   error: string | null;
   checkAuth: () => Promise<void>;
+  refreshAccessToken: () => Promise<string>;
 }
 
 const initialState: AuthState = {
@@ -217,7 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, checkAuth }}>
+    <AuthContext.Provider value={{ ...state, login, logout, checkAuth, refreshAccessToken }}>
       {children}
     </AuthContext.Provider>
   );
