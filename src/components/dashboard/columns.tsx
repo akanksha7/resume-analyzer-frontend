@@ -56,10 +56,10 @@ export const columns: ColumnDef<ResumeData>[] = [
       return (
         <div className="text-center">
           <span className={cn(
-            "px-2 py-1 rounded-full text-xs font-medium",
+            "px-2 py-1 text-xs font-medium",
             status === 'completed' 
-              ? "bg-green-50 text-green-600" 
-              : "bg-gray-100 text-muted-foreground"
+              ? "text-green-600" 
+              : "text-muted-foreground"
           )}>
             {status === 'completed' ? 'Analyzed' : 'Queued'}
           </span>

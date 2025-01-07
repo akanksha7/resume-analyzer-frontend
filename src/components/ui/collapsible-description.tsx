@@ -42,7 +42,7 @@ const CollapsibleDescription: React.FC<CollapsibleDescriptionProps> = ({
       >
         <div 
           ref={contentRef}
-          className="text-muted-foreground whitespace-pre-wrap"
+          className="text-muted-foreground whitespace-pre-wrap text-justify text-sm"
         >
           {description}
         </div>
@@ -51,7 +51,7 @@ const CollapsibleDescription: React.FC<CollapsibleDescriptionProps> = ({
       {/* Gradient overlay when collapsed */}
       {!isExpanded && (
         <div 
-          className="absolute bottom-12 left-0 right-0 h-16 bg-gradient-to-t from-muted/30 via-muted/30 to-transparent"
+          className="absolute bottom-8 left-0 right-0 h-16 bg-gradient-to-t from-muted/30 via-muted/30 to-transparent"
         />
       )}
       
@@ -59,7 +59,7 @@ const CollapsibleDescription: React.FC<CollapsibleDescriptionProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          className="text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           {isExpanded ? (
