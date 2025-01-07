@@ -15,7 +15,7 @@ const CollapsibleDescription: React.FC<CollapsibleDescriptionProps> = ({
   description,
   isUploadingActive
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState<number>(0);
 

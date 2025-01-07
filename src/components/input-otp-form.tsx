@@ -30,6 +30,7 @@ interface InputOTPFormProps {
 }
 
 export function InputOTPForm({ email }: InputOTPFormProps) {
+  debugger;
  const [isVerifying, setIsVerifying] = useState(false);
  const navigate = useNavigate();
  const form = useForm<z.infer<typeof FormSchema>>({
@@ -38,6 +39,8 @@ export function InputOTPForm({ email }: InputOTPFormProps) {
      pin: "",
    },
  });
+
+
 
  async function onSubmit(data: z.infer<typeof FormSchema>) {
   try {
@@ -58,7 +61,9 @@ export function InputOTPForm({ email }: InputOTPFormProps) {
 }
 
  return (
+    
    <Form {...form}>
+
      <form
        onSubmit={form.handleSubmit(onSubmit)}
        className="space-y-6"
@@ -68,6 +73,7 @@ export function InputOTPForm({ email }: InputOTPFormProps) {
          name="pin"
          render={({ field }) => (
            <FormItem>
+            <div className="flex flex-col items-center justify-center space-y-2">
              <FormLabel>Verification Code</FormLabel>
              <FormControl>
                <InputOTP maxLength={6} {...field}>
@@ -81,10 +87,13 @@ export function InputOTPForm({ email }: InputOTPFormProps) {
              <FormDescription>
                Enter the 6-digit code sent to your email
              </FormDescription>
+             
              <FormMessage />
+             </div>
            </FormItem>
          )}
        />
+       
 
        <Button
          type="submit"

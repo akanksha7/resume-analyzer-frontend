@@ -1,55 +1,76 @@
-import { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+// VerifyOtpPage.tsx
+import { useState } from 'react';
 import { useAuth } from '@/services/authContext';
 import { InputOTPForm } from '@/components/input-otp-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { verifyEmail } from '@/services/api';
+import { useToast } from '@/components/hooks/use-toast';
 
 export default function VerifyOtpPage() {
-  const { isAuthenticated, user, isLoading } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const email = location.state?.email;
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isResending, setIsResending] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
 
-  useEffect(() => {
-    if (!isLoading) {
-      // If user is verified, redirect to appropriate page
-      if (isAuthenticated && user?.email_verified) {
-        navigate(user.is_active_plan ? '/dashboard' : '/plans', { replace: true });
-        return;
-      }
+  const handleResendOTP = async () => {
+    if (resendTimer > 0 || !user?.email) return;
+    
+    setIsResending(true);
+    try {
+      await verifyEmail(user.email);
+      setResendTimer(30);
+      const timer = setInterval(() => {
+        setResendTimer(prev => prev <= 1 ? (clearInterval(timer), 0) : prev - 1);
+      }, 1000);
 
-      // If not authenticated or no email, go back to login
-      if (!isAuthenticated || !email) {
-        navigate('/login', { replace: true });
-      }
+      toast({
+        title: "Code sent",
+        description: "A new verification code has been sent to your email",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send verification code. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResending(false);
     }
-  }, [isLoading, isAuthenticated, user, email, navigate]);
+  };
 
-  if (isLoading || !email) {
-    return null;
-  }
+  if (!user?.email) return null;
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="space-y-2 text-center">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl font-semibold tracking-tight">
-                Verify your email
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                We've sent a verification code to {email}
-
-              </p>
+    <div className="flex min-h-svh w-full bg-muted/10">
+      <div className="flex flex-1 flex-col justify-center items-center px-4">
+        <div className="w-full max-w-[400px]">
+          <Card className="border shadow-sm">
+            <CardHeader className="text-center">
+              <CardTitle className="text-xl">Please Verify Your Email</CardTitle>
             </CardHeader>
-            <CardContent>
-              
-              <InputOTPForm email={email} />
+            <CardContent className="space-y-6">
+              <InputOTPForm email={user.email}/>
+              <div className="flex flex-col items-center gap-1.5">
+                <span className="text-sm text-muted-foreground">Didn't receive the code?</span>
+                <Button 
+                  variant="link" 
+                  onClick={handleResendOTP} 
+                  disabled={resendTimer > 0 || isResending}
+                  className="h-auto p-0"
+                >
+                  {resendTimer > 0 ? (
+                    <span className="text-sm text-muted-foreground">
+                      Resend in {resendTimer}s
+                    </span>
+                  ) : (
+                    <span className="text-sm">Resend</span>
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
-       
       </div>
     </div>
   );

@@ -16,12 +16,12 @@ import ResumeAnalysisPage from './pages/ResumeAnalysisPage';
 
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  debugger;
   const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return <LoadingSpinner />;
   }
-  debugger;
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -59,6 +59,25 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
+function VerifyOTPRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated || !user?.email) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // If already verified, redirect to appropriate page
+  if (user.email_verified) {
+    return <Navigate to={user.is_active_plan ? '/dashboard' : '/plans'} replace />;
+  }
+
+  return <>{children}</>;
+}
 
 function AppRoutes() {
   return (
@@ -67,8 +86,13 @@ function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-      <Route path="/verify-otp" element={<PublicRoute><VerifyOtpPage /></PublicRoute>} />
-      {/* <Route path="/about" element={<PublicRoute><AboutPage /></PublicRoute>} /> */}
+      
+      {/* Verification route with special protection */}
+      <Route path="/verify-otp" element={
+        <VerifyOTPRoute>
+          <VerifyOtpPage />
+        </VerifyOTPRoute>
+      } />
       
       {/* Semi-protected routes */}
       <Route path="/plans" element={<PricingPage />} />

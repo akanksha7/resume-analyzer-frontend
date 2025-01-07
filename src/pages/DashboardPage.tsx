@@ -18,16 +18,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { MoreHorizontal, Pencil, Trash2, UploadCloud } from "lucide-react"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+
 import { Progress } from "@/components/ui/progress"
 import { Card } from "@/components/ui/card"
 import { api } from "@/services/api"
@@ -44,6 +37,8 @@ import CollapsibleDescription from '@/components/ui/collapsible-description';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Play, FileText } from "lucide-react";
 import { describe } from 'node:test';
+import { ResumeDataTable } from '@/components/dashboard/data-table';
+import { columns } from '@/components/dashboard/columns';
 
 interface ResumeUploadResult {
   id: string;
@@ -304,58 +299,58 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
 };
   
  
-  const handleUpdateJob = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!activeJob) return;
+  // const handleUpdateJob = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!activeJob) return;
   
-    try {
-      const job = await api.updateJob(
-        activeJob.catalog_id,
-        activeJob.id,
-        {
-          title: jobForm.title,
-          description: jobForm.description
-        }
-      );
+  //   try {
+  //     const job = await api.updateJob(
+  //       activeJob.catalog_id,
+  //       activeJob.id,
+  //       {
+  //         title: jobForm.title,
+  //         description: jobForm.description
+  //       }
+  //     );
       
       // Update active job
-      const updatedJob = {
-        id: job.id,
-        title: job.title,
-        catalog_id: job.catalog_id,
-        catalogName: selectedCatalog?.name || '',
-        description: job.description
-      };
+      // const updatedJob = {
+      //   id: job.id,
+      //   title: job.title,
+      //   catalog_id: job.catalog_id,
+      //   catalogName: selectedCatalog?.name || '',
+      //   description: job.description
+      // };
       
-      setActiveJob(updatedJob);
+      // setActiveJob(updatedJob);
       
       // Reset form
-      setJobForm({ 
-        title: '', 
-        description: '', 
-        catalogId: '', 
-        catalogName: ''
-      });
+      // setJobForm({ 
+      //   title: '', 
+      //   description: '', 
+      //   catalogId: '', 
+      //   catalogName: ''
+      // });
       
-      setView(DashboardView.UPLOAD_RESUMES);
+  //     setView(DashboardView.UPLOAD_RESUMES);
       
-      // Update sidebar data
-      onJobUpdate && onJobUpdate(updatedJob);
+  //     // Update sidebar data
+  //     // onJobUpdate && onJobUpdate(updatedJob);
       
-      toast({
-        title: "Success",
-        description: "Job description updated successfully",
-        variant: "default",
-      });
-    } catch (error) {
-      console.error('Failed to update job:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update job description",
-        variant: "destructive",
-      });
-    }
-  };
+  //     toast({
+  //       title: "Success",
+  //       description: "Job description updated successfully",
+  //       variant: "default",
+  //     });
+  //   } catch (error) {
+  //     console.error('Failed to update job:', error);
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to update job description",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
 
   useEffect(() => {
     const fetchExistingResumes = async () => {
@@ -442,15 +437,10 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
       return (
         <Card className="max-w-4xl mx-auto p-6">
           <h2 className="text-2xl font-semibold mb-6">
-            {activeJob?.id == null || activeJob?.id == '' ? 'Create New Job Description' : 'Update Job Description' }
+            'Create New Job Description' 
           </h2>
           <form onSubmit={(e) => {
-            e.preventDefault();
-            if (activeJob?.id == null || activeJob?.id == '') {
               handleCreateJob(e);
-            } else {
-              handleUpdateJob(e);
-            }
           }} className="space-y-6">
             <div>
               <label className="text-sm font-medium mb-2 block">Job Title</label>
@@ -473,7 +463,7 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
             </div>
             <div className="flex gap-4">
                 <Button type="submit" className="flex-1">
-                  {activeJob?.id == null || activeJob?.id == '' ? 'Create Job' : 'Update Job'}
+                  'Create Job'
                 </Button>
               <Button   
                 type="button" 
@@ -517,7 +507,7 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem 
+              {/* <DropdownMenuItem 
                 onClick={() => {
                   // Set form values with current job data
                   setJobForm({
@@ -531,7 +521,7 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
               >
                 <Pencil className="mr-2 h-4 w-4" />
                 Update Description
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
                 <DropdownMenuItem 
                   onClick={() => handleDeleteJob(activeJob.catalog_id, activeJob.id)}
                   className="text-red-600 focus:text-red-600"
@@ -564,7 +554,7 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
               id="resume-upload"
               disabled={isUploading}
             />
-            <label 
+            {/* <label 
               htmlFor="resume-upload"
               className={cn(
                 "cursor-pointer flex flex-col items-center",
@@ -580,6 +570,38 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
                   {uploadedResumes.length} files uploaded
                 </span>
               )}
+            </label> */}
+            <label 
+              htmlFor="resume-upload"
+              className={cn(
+                "cursor-pointer flex flex-col items-center",
+                isUploading && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              
+              <span className="text-sm text-muted-foreground flex items-center gap-2 mb-1">
+                <UploadCloud className="h-5 w-5 text-primary" />
+                Upload Resumes to Catalog
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Accepted Formats: PDF, DOC, DOCX
+              </span>
+              <Input
+                type="file"
+                className="hidden"
+                id="resume-upload-input"
+                onChange={(e) => {
+                  const fileCount = e.target.files?.length || 0;
+                  if (fileCount > 0) {
+                    const filesText = `${fileCount} ${fileCount === 1 ? 'file' : 'files'} selected`;
+                    const sibling = e.target.nextElementSibling as HTMLElement | null;
+                    if (sibling) {
+                      sibling.textContent = filesText;
+                    }
+                  }
+                }}
+              />
+              <span className="text-xs text-primary mt-2">No files selected</span>
             </label>
           </div>
 
@@ -593,24 +615,8 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
             </div>
           )}
 
-          {/* Uploaded Resumes Table */}
-          {/* {uploadedResumes.length > 0 && (
-            <div className="mt-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Uploaded Resumes</h3>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => handleAnalyzeSelected()}
-                    disabled={selectedResumes.length === 0}
-                    className="flex items-center"
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    Analyze Selected ({selectedResumes.length})
-                  </Button>
-                </div>
-              </div> */}
-              {uploadedResumes.length > 0 && (
+     
+              {/* {uploadedResumes.length > 0 && (
                 <div className="mt-6">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">
@@ -721,6 +727,27 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
                 </TableBody>
               </Table>
             </div>
+          )} */}
+          {uploadedResumes.length > 0 && (
+            <div className="mt-6">
+              <ResumeDataTable
+                data={uploadedResumes}
+                columns={columns}
+                isLoading={isLoadingResumes}
+                onAnalyzeSelected={handleAnalyzeSelected}
+                selectedRows={selectedResumes}
+                meta={{
+                  onViewAnalysis: (resumeId: string) => navigate(`/resume-analysis/${resumeId}`, {
+                    state: { 
+                      jobId: activeJob?.id,
+                      catalogId: activeJob?.catalog_id,
+                      resumeId: resumeId
+                    }
+                  }),
+                  onDeleteResume: handleDeleteResume
+                }}
+              />
+            </div>
           )}
         </div>
       </Card>
@@ -763,7 +790,7 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
             setUploadedResumes([]);
           }}
           onCatalogDelete={handleCatalogDelete}
-          onJobUpdate={handleUpdateJob}
+          // onJobUpdate={handleUpdateJob}
           onJobDelete={handleDeleteJob}
         />
         <SidebarInset>

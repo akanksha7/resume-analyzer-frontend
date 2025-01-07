@@ -1,23 +1,80 @@
-import { FC } from 'react';
-import { useNavigate } from 'react-router-dom';
+// pages/CheckoutSuccessPage.tsx
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, Loader2 } from "lucide-react";
+import { api } from "@/services/api";
 
-const SuccessPage: FC = () => {
+export default function CheckoutSuccessPage() {
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [customerEmail, setCustomerEmail] = useState('');
+
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id');
+    if (!sessionId) {
+      navigate('/plans');
+      return;
+    }
+
+    const verifySession = async () => {
+      try {
+        const response = await api.getCheckoutSession(sessionId);
+        if (response.status === 'complete') {
+          setStatus('success');
+          setCustomerEmail(response.customer_email);
+        } else {
+          navigate('/checkout');
+        }
+      } catch (error) {
+        setStatus('error');
+      }
+    };
+
+    verifySession();
+  }, [searchParams, navigate]);
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold mb-4">Payment Successful!</h1>
-        <p className="mb-8">Thank you for your purchase.</p>
-        <button 
-          onClick={() => navigate('/')}
-          className="px-6 py-2 bg-blue-500 rounded-lg hover:bg-blue-600"
-        >
-          Return to Home
-        </button>
-      </div>
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="min-h-screen bg-background flex items-center justify-center p-4"
+    >
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <div className="flex items-center justify-center mb-6">
+            <CheckCircle className="h-12 w-12 text-green-500" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-center">
+            Payment Successful!
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <p className="text-center text-muted-foreground">
+            Thank you for your subscription. A confirmation email has been sent to{" "}
+            <span className="font-medium text-foreground">{customerEmail}</span>.
+          </p>
+          <div className="flex flex-col space-y-3">
+            <Button onClick={() => navigate('/dashboard')}>
+              Go to Dashboard
+            </Button>
+            <Button variant="outline" onClick={() => window.location.href = 'mailto:support@talenttuner.com'}>
+              Contact Support
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
-};
-
-export default SuccessPage;
+}

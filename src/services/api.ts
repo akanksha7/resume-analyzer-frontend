@@ -172,20 +172,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/api/plans`);
     return response.json();
   },
-  // getMe: async () => {
-  //   const response = await fetch(`${API_BASE_URL}/api/users/me`, {
-  //     headers: {
-  //       'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-  //     }
-  //   });
 
-  //   if (!response.ok) {
-  //     throw new Error('Failed to fetch user data');
-  //   }
-
-  //   return response.json();
-  //   return Promise.resolve(response);
-  // },
   analyzeBatchResumes: async (jobDescriptionId: string, resumeIds: string[]) => {
     const response = await fetch(`${API_BASE_URL}/api/analyze/batch`, {
       method: 'POST',
@@ -243,6 +230,37 @@ export const api = {
 
     if (!response.ok) {
       throw new Error('Failed to refresh token');
+    }
+
+    return response.json();
+  },
+
+  createCheckoutSession: async (planId: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/create-checkout-session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+      body: JSON.stringify({ planId }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create checkout session');
+    }
+
+    return response.json();
+  },
+
+  getCheckoutSession: async (sessionId: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/session-status?session_id=${sessionId}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get session status');
     }
 
     return response.json();
