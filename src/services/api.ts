@@ -20,6 +20,39 @@ export const verifyEmail = async (email: string): Promise<APIResponse> => {
   }
 };
 
+// export const analyzeBatchResumes = async (jobId: string, resumeIds: string[]): Promise<void> => {
+//   console.log('Calling analyzeBatchResumes with:', { jobId, resumeIds }); 
+  
+//   try {
+//     const token = localStorage.getItem('access_token');
+    
+//     const response = await fetch(`${API_BASE_URL}/api/analyze/batch`, {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//         'Authorization': `Bearer ${token}`,
+//       },
+//       body: JSON.stringify({
+//         job_description_id: jobId,
+//         resume_ids: resumeIds
+//       }),
+//     });
+
+//     if (!response.ok) {
+//       const errorData = await response.json().catch(() => null);
+//       console.error('Error response:', errorData);
+//       throw new Error(errorData?.message || 'Failed to start analysis');
+//     }
+
+//     const data = await response.json();
+//     console.log('Analysis response:', data);
+//     return data;
+//   } catch (error) {
+//     console.error('API Error:', error);
+//     throw error;
+//   }
+// };
+
 export const registerEmail = async (email: string, password: string): Promise<APIResponse> => {
   try {
     const response = await axios.post(`${API_BASE_URL}/api/auth/register`, { email, password });
@@ -64,12 +97,31 @@ export const api = {
     return response.json();
   },
 
-  getResumes: async (catalogId: string, jobDescriptionId: string) => {
+  analyzeBatchResumes: async (jobDescriptionId: string, resumeIds: string[]) => {
+    const response = await fetch(`${API_BASE_URL}/api/analyze/batch`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        job_description_id: jobDescriptionId,
+        resume_ids: resumeIds
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to start batch analysis');
+    }
+
+    return response.json();
+  },
+
+  getResumes: async (catalog_id: string, job_description_id: string) => {
     const response = await fetch(
-      `${API_BASE_URL}/api/catalogs/${catalogId}/resumes?job_description_id=${jobDescriptionId}`,
+      `${API_BASE_URL}/api/catalogs/${catalog_id}/resumes?job_description_id=${job_description_id}`,
       {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
       }
@@ -188,25 +240,6 @@ export const api = {
     return response.json();
   },
 
-  analyzeBatchResumes: async (jobDescriptionId: string, resumeIds: string[]) => {
-    const response = await fetch(`${API_BASE_URL}/api/analyze/batch`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        job_description_id: jobDescriptionId,
-        resume_ids: resumeIds
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to start batch analysis');
-    }
-
-    return response.json();
-  },
 
   getResumeAnalysis: async (job_description_id: string, resume_id: string) => {
     const response = await fetch(`${API_BASE_URL}/api/${job_description_id}/resumes/${resume_id}`, {

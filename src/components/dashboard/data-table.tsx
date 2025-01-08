@@ -25,28 +25,28 @@ import { Play, Search, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
 import { Card } from "@/components/ui/card"
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-  isLoading?: boolean
-  onAnalyzeSelected?: () => void
-  selectedRows?: string[]
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  isLoading?: boolean;
+  onAnalyzeSelected?: (resumeIds: string[]) => Promise<void>; // Updated type
+  selectedRows?: string[];
+  setSelectedRows?: (rows: string[]) => void;
   meta?: {
     onViewAnalysis: (resumeId: string) => void;
     onDeleteResume: (resumeId: string) => void;
-  }
+  };
 }
-
-export function ResumeDataTable<TData, TValue>({
+export function ResumeDataTable<TData extends { id: string }, TValue>({
   columns,
   data,
   isLoading,
   onAnalyzeSelected,
   selectedRows = [],
+  setSelectedRows,
   meta,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [globalFilter, setGlobalFilter] = React.useState("")
-  const [rowSelection, setRowSelection] = React.useState({})
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = React.useState("");
 
   const table = useReactTable({
     data,
@@ -56,19 +56,35 @@ export function ResumeDataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
-    onRowSelectionChange: setRowSelection,
+    getRowId: (row: TData) => row.id,
+    onRowSelectionChange: (updaterOrValue) => {
+      if (!setSelectedRows) return;
+
+      const newSelection = 
+        typeof updaterOrValue === 'function'
+          ? updaterOrValue(table.getState().rowSelection)
+          : updaterOrValue;
+
+      const selectedIds = Object.entries(newSelection)
+        .filter(([_, selected]) => selected)
+        .map(([id]) => id);
+
+      setSelectedRows(selectedIds);
+    },
     state: {
       sorting,
       globalFilter,
-      rowSelection,
+      rowSelection: Object.fromEntries(
+        selectedRows.map((id) => [id, true])
+      ),
     },
     meta,
-    initialState: {
-      pagination: {
-        pageSize: 50, // Show 50 items per page
-      },
-    },
-  })
+    enableRowSelection: true,
+  });
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setGlobalFilter(e.target.value);
+  };
 
   return (
     <Card className="p-4 space-y-4">
@@ -78,14 +94,15 @@ export function ResumeDataTable<TData, TValue>({
           <Input
             placeholder="Search resumes..."
             value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
+            onChange={handleSearchChange}
             className="pl-8 w-full"
+            type="search"
           />
         </div>
         <Button
           size="sm"
-          onClick={onAnalyzeSelected}
-          disabled={Object.keys(rowSelection).length === 0 || isLoading}
+          onClick={() => onAnalyzeSelected?.(selectedRows)}
+          disabled={selectedRows.length === 0 || isLoading}
           className="w-full sm:w-auto"
         >
           {isLoading ? (
@@ -93,7 +110,7 @@ export function ResumeDataTable<TData, TValue>({
           ) : (
             <Play className="h-4 w-4 mr-2" />
           )}
-          Analyze {Object.keys(rowSelection).length > 0 && `(${Object.keys(rowSelection).length})`}
+          Analyze {selectedRows.length > 0 && `(${selectedRows.length})`}
         </Button>
       </div>
 

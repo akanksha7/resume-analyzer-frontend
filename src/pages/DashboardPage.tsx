@@ -30,13 +30,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Progress } from "@/components/ui/progress";
 import { cn } from '@/lib/utils';
-import { api } from "@/services/api";
 
 import { columns } from '@/components/dashboard/columns';
 import { ResumeDataTable } from '@/components/dashboard/data-table';
 import { useToast } from "@/components/hooks/use-toast";
 import CollapsibleDescription from '@/components/ui/collapsible-description';
 import { ColumnDef } from '@tanstack/react-table';
+import { api } from "@/services/api";
 
 interface ResumeUploadResult {
   id: string;
@@ -74,15 +74,15 @@ interface ResumeAnalysis {
   created_at: string;
 }
 
-interface Resume {
-  id: string;
-  filename: string;
-  analysis?: ResumeAnalysis;
-  analysisStatus: 'queued' | 'completed';
-  matchScore: number;
-}
+// interface Resume {
+//   id: string;
+//   filename: string;
+//   analysis?: ResumeAnalysis;
+//   analysisStatus: 'queued' | 'completed';
+//   matchScore: number;
+// }
 
-const Dashboard = ({ onJobDelete, onJobUpdate }: DashboardProps) => {
+const Dashboard = ({ onJobDelete }: DashboardProps) => {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [uploadedResumes, setUploadedResumes] = useState<ResumeUploadResult[]>([]);
   const [activeJob, setActiveJob] = useState<ActiveJob | null>(null);
@@ -99,20 +99,35 @@ const Dashboard = ({ onJobDelete, onJobUpdate }: DashboardProps) => {
   const navigate = useNavigate();
 
   const [isLoadingResumes, setIsLoadingResumes] = useState(false);
+  // const isAllSelected = useMemo(() => 
+  //   uploadedResumes.length > 0 && selectedResumes.length === uploadedResumes.length,
+  //   [uploadedResumes.length, selectedResumes.length]
+  // );
   const [selectedResumes, setSelectedResumes] = useState<string[]>([]);
-  const isAllSelected = useMemo(() => 
-    uploadedResumes.length > 0 && selectedResumes.length === uploadedResumes.length,
-    [uploadedResumes.length, selectedResumes.length]
-  );
+
+  useEffect(() => {
+    // Clear selected resumes when active job changes
+    setSelectedResumes([]);
+  }, [activeJob]);
+
+  const handleSetSelectedResumes = (rows: string[]) => {
+    console.log('Setting selected resumes:', rows); // Debug log
+    setSelectedResumes(rows);
+  };
 
 
   const handleAnalyzeSelected = async () => {
-    if (!activeJob?.id || selectedResumes.length === 0) return;
+    console.log("handleAnalyzeSelected called", selectedResumes); // Debug log
+  
+    if (!activeJob?.id || selectedResumes.length === 0) {
+      console.log("Early return - no job or no selected resumes"); // Debug log
+      return;
+    }
   
     try {
+      console.log("Starting analysis for resumes:", selectedResumes); // Debug log
       await api.analyzeBatchResumes(activeJob.id, selectedResumes);
       
-      // Update the status of selected resumes to 'queued'
       setUploadedResumes(prevResumes => 
         prevResumes.map(resume => ({
           ...resume,
@@ -121,7 +136,6 @@ const Dashboard = ({ onJobDelete, onJobUpdate }: DashboardProps) => {
         }))
       );
       
-      // Clear selection after starting analysis
       setSelectedResumes([]);
       
       toast({
@@ -139,7 +153,7 @@ const Dashboard = ({ onJobDelete, onJobUpdate }: DashboardProps) => {
   };
 
   const handleViewAnalysis = (resumeId: string) => {
-    navigate(`/analysis/${resumeId}`);
+    navigate(`/resume-analysis/${resumeId}`);
   };
 
   const handleDeleteResume = async (resumeId: string) => {
@@ -163,7 +177,6 @@ const Dashboard = ({ onJobDelete, onJobUpdate }: DashboardProps) => {
     }
   };
 
-  // Function to handle file uploads
   const handleFileUpload = async (files: FileList) => {
 
     if (!activeJob || isUploading) return;
@@ -180,19 +193,12 @@ const Dashboard = ({ onJobDelete, onJobUpdate }: DashboardProps) => {
         });
       }, 200);
 
-      const result = await api.uploadResumes(activeJob.catalog_id, files);
+      await api.uploadResumes(activeJob.catalog_id, files);
       
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      const newResumes: ResumeUploadResult[] = result.results.map((r: { id?: string; filename: string }) => ({
-        id: r.id || crypto.randomUUID(),
-        filename: r.filename,
-        analysisStatus: 'queued',
-        matchScore: 0
-      }));
-
-      setUploadedResumes(prev => [...prev, ...newResumes]);
+      await api.getResumes(activeJob.catalog_id, activeJob.id);
       
       toast({
         title: "Upload Successful",
@@ -211,7 +217,6 @@ const Dashboard = ({ onJobDelete, onJobUpdate }: DashboardProps) => {
         title: "Upload Failed",
         description: "Failed to upload resumes. Please try again.",
         variant: "destructive",
-        // icon: <XCircle className="h-4 w-4" />
       });
       setUploadProgress(0);
     } finally {
@@ -242,7 +247,6 @@ const Dashboard = ({ onJobDelete, onJobUpdate }: DashboardProps) => {
         title: "Success",
         description: "Job description created successfully",
         variant: "default",
-        // icon: <CheckCircle className="h-4 w-4 text-green-500" />
       });
     } catch (error) {
       console.error('Failed to create job:', error);
@@ -250,7 +254,6 @@ const Dashboard = ({ onJobDelete, onJobUpdate }: DashboardProps) => {
         title: "Error",
         description: "Failed to create job description",
         variant: "destructive",
-        // icon: <XCircle className="h-4 w-4" />
       });
     }
   };
@@ -266,7 +269,6 @@ const Dashboard = ({ onJobDelete, onJobUpdate }: DashboardProps) => {
         title: "Catalog Deleted",
         description: "Catalog has been removed successfully",
         variant: "default",
-        // icon: <CheckCircle className="h-4 w-4 text-green-500" />
       });
     }
   };
@@ -295,60 +297,6 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
     });
   }
 };
-  
- 
-  // const handleUpdateJob = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   if (!activeJob) return;
-  
-  //   try {
-  //     const job = await api.updateJob(
-  //       activeJob.catalog_id,
-  //       activeJob.id,
-  //       {
-  //         title: jobForm.title,
-  //         description: jobForm.description
-  //       }
-  //     );
-      
-      // Update active job
-      // const updatedJob = {
-      //   id: job.id,
-      //   title: job.title,
-      //   catalog_id: job.catalog_id,
-      //   catalogName: selectedCatalog?.name || '',
-      //   description: job.description
-      // };
-      
-      // setActiveJob(updatedJob);
-      
-      // Reset form
-      // setJobForm({ 
-      //   title: '', 
-      //   description: '', 
-      //   catalogId: '', 
-      //   catalogName: ''
-      // });
-      
-  //     setView(DashboardView.UPLOAD_RESUMES);
-      
-  //     // Update sidebar data
-  //     // onJobUpdate && onJobUpdate(updatedJob);
-      
-  //     toast({
-  //       title: "Success",
-  //       description: "Job description updated successfully",
-  //       variant: "default",
-  //     });
-  //   } catch (error) {
-  //     console.error('Failed to update job:', error);
-  //     toast({
-  //       title: "Error",
-  //       description: "Failed to update job description",
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
 
   useEffect(() => {
     const fetchExistingResumes = async () => {
@@ -506,21 +454,6 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-              {/* <DropdownMenuItem 
-                onClick={() => {
-                  // Set form values with current job data
-                  setJobForm({
-                    title: activeJob.title,
-                    description: activeJob.description,
-                    catalogId: activeJob.catalog_id,
-                    catalogName: activeJob.catalogName
-                  });
-                  setView(DashboardView.CREATE_JOB);
-                }}
-              >
-                <Pencil className="mr-2 h-4 w-4" />
-                Update Description
-              </DropdownMenuItem> */}
                 <DropdownMenuItem 
                   onClick={() => handleDeleteJob(activeJob.catalog_id, activeJob.id)}
                   className="text-red-600 focus:text-red-600"
@@ -532,7 +465,6 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
             </DropdownMenu>
           </div>
 
-          {/* <p className="text-muted-foreground mt-1">{activeJob.description}</p> */}
           <CollapsibleDescription 
             description={activeJob.description}
             isUploadingActive={isUploading || uploadProgress > 0}
@@ -599,23 +531,18 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
           )}
           {uploadedResumes.length > 0 && (
             <div className="mt-6">
-              <ResumeDataTable
-                data={uploadedResumes}
-                columns={columns as ColumnDef<ResumeUploadResult>[]}
-                isLoading={isLoadingResumes}
-                onAnalyzeSelected={handleAnalyzeSelected}
-                selectedRows={selectedResumes}
-                meta={{
-                  onViewAnalysis: (resumeId: string) => navigate(`/resume-analysis/${resumeId}`, {
-                    state: { 
-                      jobId: activeJob?.id,
-                      catalogId: activeJob?.catalog_id,
-                      resumeId: resumeId
-                    }
-                  }),
-                  onDeleteResume: handleDeleteResume
-                }}
-              />
+            <ResumeDataTable
+              data={uploadedResumes}
+              columns={columns as ColumnDef<ResumeUploadResult>[]}
+              isLoading={isLoadingResumes}
+              onAnalyzeSelected={handleAnalyzeSelected}
+              selectedRows={selectedResumes}
+              setSelectedRows={handleSetSelectedResumes}
+              meta={{
+                onViewAnalysis: handleViewAnalysis,
+                onDeleteResume: handleDeleteResume
+              }}
+            />
             </div>
           )}
         </div>

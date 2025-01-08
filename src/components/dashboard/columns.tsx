@@ -1,3 +1,4 @@
+// columns.tsx
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
@@ -6,12 +7,17 @@ import { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown, ExternalLink, FileText, Trash2 } from "lucide-react"
 import { useState } from "react"
 
-interface ResumeData {
+export interface ResumeData {
   id: string;
   filename: string;
-  s3_url: string;
-  analysisStatus: 'queued' | 'completed';
+  s3_url?: string;
+  is_analyzed: boolean;
   matchScore: number;
+}
+
+interface TableMeta {
+  onViewAnalysis: (resumeId: string) => void;
+  onDeleteResume: (resumeId: string) => void;
 }
 
 interface ResumeViewerProps {
@@ -44,14 +50,14 @@ const ResumeViewer: React.FC<ResumeViewerProps> = ({ url, filename, isOpen, onCl
   );
 };
 
-export const columns: ColumnDef<ResumeData>[] = [
+export const columns: ColumnDef<ResumeData, unknown>[] = [
   {
     id: "select",
     header: ({ table }) => (
       <div className="px-1">
         <Checkbox
           className="h-4 w-4 rounded-sm data-[state=checked]:bg-primary"
-          checked={table.getIsAllPageRowsSelected()}
+          checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
         />
@@ -75,7 +81,7 @@ export const columns: ColumnDef<ResumeData>[] = [
     header: ({ column }) => (
       <div className="pl-4">Resume</div>
     ),
-    cell: ({ row, table }) => {
+    cell: ({ row }) => {
       const [isViewerOpen, setIsViewerOpen] = useState(false);
       return (
         <div className="pl-4 font-medium group flex items-center gap-2">
@@ -89,12 +95,14 @@ export const columns: ColumnDef<ResumeData>[] = [
             </span>
             <ExternalLink className="w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
           </Button>
-          <ResumeViewer
-            url={row.original.s3_url}
-            filename={row.getValue("filename")}
-            isOpen={isViewerOpen}
-            onClose={() => setIsViewerOpen(false)}
-          />
+          {row.original.s3_url && (
+            <ResumeViewer
+              url={row.original.s3_url}
+              filename={row.getValue("filename")}
+              isOpen={isViewerOpen}
+              onClose={() => setIsViewerOpen(false)}
+            />
+          )}
         </div>
       );
     },
@@ -105,19 +113,19 @@ export const columns: ColumnDef<ResumeData>[] = [
       <div className="text-center">Status</div>
     ),
     cell: ({ row }) => {
-      const status = row.getValue("analysisStatus") as string
+      const status = row.getValue("is_analyzed") as string;
       return (
         <div className="text-center">
           <span className={cn(
             "px-2 py-1 text-xs font-medium",
-            status === 'completed' 
+            status === 'true' 
               ? "text-green-600" 
               : "text-muted-foreground"
           )}>
-            {status === 'completed' ? 'Analyzed' : 'Queued'}
+            {status === 'true' ? 'Analyzed' : 'Queued'}
           </span>
         </div>
-      )
+      );
     },
   },
   {
@@ -134,52 +142,52 @@ export const columns: ColumnDef<ResumeData>[] = [
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         </div>
-      )
+      );
     },
     cell: ({ row }) => {
-      const status = row.getValue("analysisStatus") as string
-      const score = row.getValue("matchScore") as number
+      const status = row.getValue("is_analyzed") as string;
+      const score = row.getValue("matchScore") as number;
 
       return (
         <div className="text-center">
           <span className={cn(
             "font-medium",
-            status === 'completed'
+            status === 'true'
               ? score >= 80
                 ? "text-green-600"
                 : "text-red-600"
               : "text-muted-foreground"
           )}>
-            {status === 'completed' ? `${score}%` : '-'}
+            {status === 'true' ? `${score}%` : '-'}
           </span>
         </div>
-      )
+      );
     },
     sortingFn: (rowA, rowB, columnId) => {
-      const a = rowA.getValue(columnId) as number
-      const b = rowB.getValue(columnId) as number
-      const statusA = rowA.getValue("analysisStatus") as string
-      const statusB = rowB.getValue("analysisStatus") as string
+      const a = rowA.getValue(columnId) as number;
+      const b = rowB.getValue(columnId) as number;
+      const statusA = rowA.getValue("is_analyzed") as string;
+      const statusB = rowB.getValue("is_analyzed") as string;
 
-      if (statusA === 'queued' && statusB === 'completed') return 1
-      if (statusA === 'completed' && statusB === 'queued') return -1
-      return a < b ? -1 : a > b ? 1 : 0
+      if (statusA === 'false' && statusB === 'true') return 1;
+      if (statusA === 'true' && statusB === 'false') return -1;
+      return a < b ? -1 : a > b ? 1 : 0;
     },
   },
   {
     id: "actions",
     header: () => <div className="text-right pr-4">Actions</div>,
     cell: ({ row, table }) => {
-      const resume = row.original
-      const { onViewAnalysis, onDeleteResume } = table.options.meta as any
+      const meta = table.options.meta as TableMeta;
+      const resume = row.original;
 
       return (
         <div className="flex justify-end gap-2 pr-4">
-          {resume.analysisStatus === 'completed' && (
+          {resume.is_analyzed === 'true' && (
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onViewAnalysis?.(resume.id)}
+              onClick={() => meta?.onViewAnalysis?.(resume.id)}
               className="h-8"
             >
               <FileText className="h-4 w-4 mr-2" />
@@ -189,13 +197,13 @@ export const columns: ColumnDef<ResumeData>[] = [
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onDeleteResume?.(resume.id)}
+            onClick={() => meta?.onDeleteResume?.(resume.id)}
             className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
-      )
+      );
     },
   },
 ];
