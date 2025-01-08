@@ -152,15 +152,19 @@ export const api = {
     return response.json();
   },
 
-  // deleteResume: async (catalog_id: string, resume_id: string) => {
-  //   const response = await fetch(`${API_BASE_URL}/api/catalogs/${catalog_id}/resumes/${resume_id}`, {
-  //     method: 'DELETE',
-  //     headers: {
-  //       'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-  //     },
-  //   });
-  //   return response.json();
-  // },
+  getStats: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/stats`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch stats');
+    }
+
+    return response.json();
+  },
 
   updateJob: async (catalog_id: string, job_description_id: string, data: { title: string; description: string }) => {
     const response = await fetch(`${API_BASE_URL}/api/catalogs/${catalog_id}/job-descriptions/${job_description_id}`, {

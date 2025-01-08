@@ -46,6 +46,29 @@ export interface Plan {
   max_job_descriptions_per_catalog: number;
 }
 
+export interface Stats {
+  recent_activities: {
+    recent_analyses: any[];
+    recent_uploads: {
+      catalog_id: string;
+      created_at: string;
+      filename: string;
+      id: string;
+    }[];
+  };
+  stats_by_catalog: {
+    analyses: number;
+    catalog_id: string;
+    catalog_name: string;
+    job_descriptions: number;
+    resumes: number;
+  }[];
+  total_analyses: number;
+  total_catalogs: number;
+  total_job_descriptions: number;
+  total_resumes: number;
+}
+
 export interface Resume {
   id: string;
   filename: string;
