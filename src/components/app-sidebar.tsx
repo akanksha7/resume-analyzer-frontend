@@ -1,14 +1,17 @@
 // components/app-sidebar.tsx
-import * as React from "react"
-import { ChevronRight, MoreHorizontal, Plus, Trash2 } from "lucide-react"
-import { SearchForm } from "@/components/search-form"
 import { NavUser } from "@/components/nav-user"
-import { Button } from "@/components/ui/button"
+import { SearchForm } from "@/components/search-form"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Sidebar,
   SidebarContent,
@@ -25,15 +28,11 @@ import {
   SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { CreateCatalogDialog } from "./create-catalog-dialog"
 import { api } from "@/services/api"
 import { ActiveJob } from "@/types/types"
+import { ChevronRight, MoreHorizontal, Plus, Trash2 } from "lucide-react"
+import * as React from "react"
+import { CreateCatalogDialog } from "./create-catalog-dialog"
 
 // Types
 interface JobDescription {

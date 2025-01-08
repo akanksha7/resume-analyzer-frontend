@@ -1,6 +1,5 @@
 // pages/DashboardPage.tsx
-import { useMemo, useState, useEffect } from 'react';
-import { AppSidebar } from "@/components/app-sidebar"
+import { AppSidebar } from "@/components/app-sidebar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,37 +7,36 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
+} from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/sidebar";
+import { Textarea } from "@/components/ui/textarea";
+import { MoreHorizontal, Trash2, UploadCloud } from "lucide-react";
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MoreHorizontal, Pencil, Trash2, UploadCloud } from "lucide-react"
 
-import { Progress } from "@/components/ui/progress"
-import { Card } from "@/components/ui/card"
-import { api } from "@/services/api"
-import { cn } from '@/lib/utils';
+import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Progress } from "@/components/ui/progress";
+import { cn } from '@/lib/utils';
+import { api } from "@/services/api";
 
+import { columns } from '@/components/dashboard/columns';
+import { ResumeDataTable } from '@/components/dashboard/data-table';
 import { useToast } from "@/components/hooks/use-toast";
 import CollapsibleDescription from '@/components/ui/collapsible-description';
-import { Checkbox } from "@/components/ui/checkbox";
-import { Play, FileText } from "lucide-react";
-import { describe } from 'node:test';
-import { ResumeDataTable } from '@/components/dashboard/data-table';
-import { columns } from '@/components/dashboard/columns';
+import { ColumnDef } from '@tanstack/react-table';
 
 interface ResumeUploadResult {
   id: string;
@@ -146,7 +144,7 @@ const Dashboard = ({ onJobDelete, onJobUpdate }: DashboardProps) => {
 
   const handleDeleteResume = async (resumeId: string) => {
     try {
-      // Implement your delete logic here
+      await api.deleteResume(activeJob?.catalog_id || '', resumeId);
       setUploadedResumes(prevResumes => 
         prevResumes.filter(resume => resume.id !== resumeId)
       );
@@ -437,7 +435,7 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
       return (
         <Card className="max-w-4xl mx-auto p-6">
           <h2 className="text-2xl font-semibold mb-6">
-            'Create New Job Description' 
+            Create New Job Description
           </h2>
           <form onSubmit={(e) => {
               handleCreateJob(e);
@@ -463,7 +461,7 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
             </div>
             <div className="flex gap-4">
                 <Button type="submit" className="flex-1">
-                  'Create Job'
+                  Create Job
                 </Button>
               <Button   
                 type="button" 
@@ -479,6 +477,7 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
             </div>
           </form>
         </Card>
+       
       );
     }
 
@@ -598,125 +597,11 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
               </p>
             </div>
           )}
-
-     
-              {/* {uploadedResumes.length > 0 && (
-                <div className="mt-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">
-                      Uploaded Resumes
-                      {isLoadingResumes && (
-                        <span className="ml-2 text-muted-foreground text-sm font-normal">
-                          Loading...
-                        </span>
-                      )}
-                    </h3>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleAnalyzeSelected()}
-                        disabled={selectedResumes.length === 0 || isLoadingResumes}
-                        className="flex items-center"
-                      >
-                        <Play className="h-4 w-4 mr-2" />
-                        Analyze Selected ({selectedResumes.length})
-                      </Button>
-                    </div>
-                  </div>
-              
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <Checkbox
-                        checked={isAllSelected}
-                        onCheckedChange={(checked) => {
-                          setSelectedResumes(checked 
-                            ? uploadedResumes.map(r => r.id)
-                            : []
-                          );
-                        }}
-                      />
-                    </TableHead>
-                    <TableHead>Resume Name</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Match Score</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {uploadedResumes.map((resume) => (
-                    <TableRow key={resume.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedResumes.includes(resume.id)}
-                          onCheckedChange={(checked) => {
-                            setSelectedResumes(checked
-                              ? [...selectedResumes, resume.id]
-                              : selectedResumes.filter(id => id !== resume.id)
-                            );
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell>{resume.filename}</TableCell>
-                      <TableCell>
-                        {resume.analysisStatus === 'completed' ? (
-                          <span className="text-green-600 font-medium">Analyzed</span>
-                        ) : (
-                          <span className="text-muted-foreground">Queued</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <span className={cn(
-                          "font-medium",
-                          resume.analysisStatus === 'completed' 
-                            ? resume.matchScore >= 80 
-                              ? "text-green-600" 
-                              : "text-red-600"
-                            : "text-muted-foreground"
-                        )}>
-                          {resume.analysisStatus === 'completed' ? `${resume.matchScore}%` : '-'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-2">
-                          {resume.analysisStatus === 'completed' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => navigate(`/resume-analysis/${resume.id}`, {
-                                state: { 
-                                  jobId: activeJob?.id,
-                                  catalogId: activeJob?.catalog_id,
-                                  resumeId: resume.id
-                                }
-                              })}
-                            >
-                              <FileText className="h-4 w-4 mr-2" />
-                              View Analysis
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteResume(resume.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )} */}
           {uploadedResumes.length > 0 && (
             <div className="mt-6">
               <ResumeDataTable
                 data={uploadedResumes}
-                columns={columns}
+                columns={columns as ColumnDef<ResumeUploadResult>[]}
                 isLoading={isLoadingResumes}
                 onAnalyzeSelected={handleAnalyzeSelected}
                 selectedRows={selectedResumes}

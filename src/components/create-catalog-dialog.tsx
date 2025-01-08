@@ -12,6 +12,7 @@ import {
   import { Plus } from 'lucide-react';
   import { api } from "@/services/api"
 import { SidebarGroupAction } from "./ui/sidebar";
+import { Catalog } from "@/types/types";
   
   export function CreateCatalogDialog({ onCatalogCreate }: { onCatalogCreate: (catalog: Catalog) => void }) {
     const [name, setName] = useState('');

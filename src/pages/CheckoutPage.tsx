@@ -98,38 +98,51 @@ export default function CheckoutPage() {
       </motion.div>
     );
   }
-
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="min-h-screen bg-background flex items-center justify-center p-4"
-    >
-      <Card className="w-full max-w-3xl bg-background-secondary border-border shadow-2xl">
-        <CardHeader className="space-y-3">
-          <CardTitle className="text-foreground text-2xl font-bold">
-            Complete Payment
-          </CardTitle>
-          <CardDescription className="text-foreground-muted">
-            Enter your payment details to activate your subscription
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="min-h-[500px]">
-          <div id="checkout" className="w-full h-full">
-            <EmbeddedCheckoutProvider
-              stripe={stripePromise}
-              options={{
-                clientSecret: checkoutData.client_secret,
-              }}
-            > 
-              <EmbeddedCheckout 
-                className="w-full h-full" 
-              />
-            </EmbeddedCheckoutProvider>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
+      <div id="checkout">
+        <EmbeddedCheckoutProvider
+          stripe={stripePromise}
+        options={{
+          clientSecret: checkoutData.client_secret,
+        }}
+      >
+        <EmbeddedCheckout />
+      </EmbeddedCheckoutProvider>
+    </div>
+  )
 }
+
+//   return (
+//     <motion.div
+//       initial={{ opacity: 0 }}
+//       animate={{ opacity: 1 }}
+//       className="min-h-screen bg-background flex items-center justify-center p-4"
+//     >
+//       <Card className="w-full max-w-3xl bg-background-secondary border-border shadow-2xl">
+//         <CardHeader className="space-y-3">
+//           <CardTitle className="text-foreground text-2xl font-bold">
+//             Complete Payment
+//           </CardTitle>
+//           <CardDescription className="text-foreground-muted">
+//             Enter your payment details to activate your subscription
+//           </CardDescription>
+//         </CardHeader>
+
+//         <CardContent className="min-h-[500px]">
+//           <div id="checkout" className="w-full h-full">
+//             <EmbeddedCheckoutProvider
+//               stripe={stripePromise}
+//               options={{
+//                 clientSecret: checkoutData.client_secret,
+//               }}
+//             > 
+//               <EmbeddedCheckout 
+//                 className="w-full h-full" 
+//               />
+//             </EmbeddedCheckoutProvider>
+//           </div>
+//         </CardContent>
+//       </Card>
+//     </motion.div>
+//   );
+// }

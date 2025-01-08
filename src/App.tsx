@@ -12,6 +12,8 @@ import DashboardPage from './pages/DashboardPage';
 import ResumeAnalysisPage from './pages/ResumeAnalysisPage';
 import LandingPage from './pages/LandingPage';
 import UsageDashboard from './pages/UsageDashboard';
+import { StepIndicatorContainer } from './components/progress-indicator';
+import { AppLayout } from './components/AppHeader';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -76,28 +78,11 @@ function ReturnPageRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// function ReturnPageRoute({ children }: { children: React.ReactNode }) {
-//   const { isAuthenticated, isLoading, user } = useAuth();
-
-//   if (isLoading) {
-//     return <LoadingSpinner />;
-//   }
-
-//   // Redirect to login if not authenticated
-//   if (!isAuthenticated || !user?.email) {
-//     return <Navigate to="/login" replace />;
-//   }
-
-//   // If already verified, redirect to appropriate page
-//   if (user.email_verified) {
-//     return <Navigate to={user.is_active_plan ? '/dashboard' : '/plans'} replace />;
-//   }
-
-//   return <>{children}</>;
-// }
 
 function AppRoutes() {
   return (
+    <AppLayout>
+    <StepIndicatorContainer /> 
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<LandingPage />}/>
@@ -127,6 +112,7 @@ function AppRoutes() {
       {/* Fallback route */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </AppLayout>
   );
 }
 

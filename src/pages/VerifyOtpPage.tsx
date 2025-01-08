@@ -42,8 +42,10 @@ export default function VerifyOtpPage() {
   if (!user?.email) return null;
 
   return (
-    <div className="flex min-h-svh w-full bg-muted/10">
-      <div className="flex flex-1 flex-col justify-center items-center px-4">
+    // <div className="min-h-screen bg-background">
+    //   <main className="container mx-auto py-8">
+      // <div className="flex min-h-svh w-full bg-muted/10">
+      <div className="flex flex-1 flex-col justify-center items-center px-4 mt-16">
         <div className="w-full max-w-[400px]">
           <Card className="border shadow-sm">
             <CardHeader className="text-center">
@@ -64,7 +66,7 @@ export default function VerifyOtpPage() {
                       Resend in {resendTimer}s
                     </span>
                   ) : (
-                    <span className="text-sm">Resend</span>
+                    <span className="text-xs">Resend Code</span>
                   )}
                 </Button>
               </div>
@@ -72,6 +74,9 @@ export default function VerifyOtpPage() {
           </Card>
         </div>
       </div>
-    </div>
+    // </div>
+    //   </main>
+    // </div>
+    
   );
 }

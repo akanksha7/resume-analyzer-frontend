@@ -1,9 +1,9 @@
-import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowUpDown, ExternalLink, FileText, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import * as Dialog from '@radix-ui/react-dialog';
+import * as Dialog from '@radix-ui/react-dialog'
+import { ColumnDef } from "@tanstack/react-table"
+import { ArrowUpDown, ExternalLink, FileText, Trash2 } from "lucide-react"
 import { useState } from "react"
 
 interface ResumeData {

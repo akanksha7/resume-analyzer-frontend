@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 import { Mission } from '../components/landing/Mission';
 import { Features } from '../components/landing/Features';
 import { HowItWorks } from '../components/landing/HowItWorks';
@@ -10,8 +11,26 @@ import { Hero } from '@/components/landing/Hero';
 interface Section {
   id: string;
   component: React.ReactNode;
-  title: string;
 }
+
+const ScrollIndicator = ({ sectionId }: { sectionId: string }) => {
+  return (
+    <motion.a
+      href={`#${sectionId}`}
+      className="absolute bottom-8 left-1/2 transform -translate-x-1/2 cursor-pointer z-50 
+                rounded-full p-2 bg-background/10 backdrop-blur-sm hover:bg-background/20 
+                transition-colors duration-200"
+      animate={{ y: [0, 10, 0] }}
+      transition={{ 
+        duration: 2,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }}
+    >
+      <ChevronDown className="w-6 h-6 text-primary" />
+    </motion.a>
+  );
+};
 
 const LandingPage: React.FC = () => {
   const [isVisible, setIsVisible] = useState<boolean>(false);
@@ -23,47 +42,50 @@ const LandingPage: React.FC = () => {
   const sections: Section[] = [
     { 
       id: 'hero', 
-      title: 'Home',
       component: (
-        <motion.div
-          className="min-h-screen flex flex-col items-center justify-center text-center px-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isVisible ? 1 : 0 }}
-          transition={{ duration: 0.8 }}
-        >
+        <div className="relative min-h-screen flex flex-col items-center justify-center text-center px-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isVisible ? 1 : 0 }}
+            transition={{ duration: 0.8 }}
+          >
             <Hero />
-        </motion.div>
+          </motion.div>
+          <ScrollIndicator sectionId="mission" />
+        </div>
       )
     },
-    { id: 'mission', title: 'Mission', component: <Mission /> },
-    { id: 'features', title: 'Features', component: <Features /> },
-    { id: 'how-it-works', title: 'How It Works', component: <HowItWorks /> },
-    // { id: 'testimonials', title: 'Testimonials', component: <Testimonials /> },
-    //{ id: 'cta', title: 'Get Started', component: <CallToAction /> }
+    { 
+      id: 'mission', 
+      component: (
+        <div className="relative min-h-screen">
+          <Mission />
+          <ScrollIndicator sectionId="features" />
+        </div>
+      )
+    },
+    { 
+      id: 'features', 
+      component: (
+        <div className="relative min-h-screen">
+          <Features />
+          <ScrollIndicator sectionId="how-it-works" />
+        </div>
+      )
+    },
+    { 
+      id: 'how-it-works', 
+      component: (
+        <div className="relative min-h-screen">
+          <HowItWorks />
+          <ScrollIndicator sectionId="cta" />
+        </div>
+      )
+    }
   ];
 
   return (
     <div className="bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
-      {/* Navigation Dots */}
-      <div className="fixed right-8 top-1/2 transform -translate-y-1/2 z-50">
-        <div className="flex flex-col gap-4">
-          {sections.map((section, index) => (
-            <div key={section.id} className="group relative flex items-center">
-              <a
-                href={`#${section.id}`}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  'bg-gray-400 hover:bg-blue-300'
-                }`}
-                aria-label={`Go to ${section.title} section`}
-              />
-              <span className="absolute left-0 transform -translate-x-full -translate-y-1/2 top-1/2 mr-2 px-2 py-1 bg-gray-800 rounded text-sm text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                {section.title}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="snap-y snap-mandatory h-screen overflow-y-scroll">
         {sections.map((section) => (
@@ -78,7 +100,10 @@ const LandingPage: React.FC = () => {
       </div>
 
       {/* Call to Action */}
-      <CallToAction />
+      <div id="cta">
+        <CallToAction />
+      </div>
+      
       {/* Footer */}
       <Footer />
     </div>
