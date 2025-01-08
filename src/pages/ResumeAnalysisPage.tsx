@@ -1,3 +1,4 @@
+// pages/ResumeAnalysisPage.tsx
 import React from 'react';
 import {
   Card,
@@ -34,70 +35,70 @@ import {
   Target
 } from 'lucide-react';
 
-const ResumeAnalysis = () => {
+const ResumeAnalysis = ({ data }) => {
   // Sample data
-  const data = {
-    "analysis": {
-      "detailed_scoring": {
-        "experience_match": {
-          "analysis": "Candidate has 6 months of internship experience but does not meet the 5+ years required for the position.",
-          "score": 1
-        },
-        "job_sector_match": {
-          "analysis": "Candidate has a relevant educational background and internship experience in web development, aligning with the job sector.",
-          "score": 2
-        },
-        "longevity_score": {
-          "analysis": "Candidate is a recent graduate with no long-term work experience, which is a gap for the role.",
-          "score": 1
-        },
-        "primary_skill_match": {
-          "analysis": "Candidate demonstrates proficiency in JavaScript, HTML/CSS, and Python but lacks experience with Flask, a key requirement.",
-          "score": 1.5
-        }
-      },
-      "executive_summary": {
-        "candidate_name": "Bella Trevino",
-        "critical_gaps": [
-          "Lack of required 5+ years experience in Python/Flask",
-          "Limited exposure to Flask specifically",
-          "Need for more extensive work experience"
-        ],
-        "key_strengths": [
-          "Strong academic background with a GPA of 3.9",
-          "Experience in full-stack development",
-          "Successful project management and collaboration"
-        ],
-        "overall_score": 5.5,
-        "position_applied": "Web Developer",
-        "recommendation": "Not Recommended"
-      },
-      "final_evaluation": {
-        "experience_alignment": 3.0,
-        "growth_potential": "Moderate",
-        "justification": "Candidate does not meet the experience requirements and lacks specific skills in Flask, which are critical for the role.",
-        "recommendation": "Not Recommended",
-        "risk_level": "High",
-        "technical_alignment": 5.0
-      },
-      "interview_questions": [
-        {
-          "category": "Technical Depth",
-          "question": "Based on your Social Media Scheduler project, how would you redesign that system to meet our requirement for scalability using Flask?",
-          "context": {
-            "assessment_focus": "Technical depth in Flask and system design",
-            "candidate_experience": "Built a responsive app with Django and Node",
-            "jd_requirement": "Experience in Flask and scalable applications"
-          },
-          "scoring_guidance": {
-            "excellent_response": "Demonstrates clear understanding of Flask, scalability solutions, and applies knowledge to the project.",
-            "acceptable_response": "Shows some knowledge of Flask but lacks depth in scalability.",
-            "concerning_response": "Unfamiliar with Flask and provides vague responses."
-          }
-        }
-      ]
-    }
-  };
+  // const data = {
+  //   "analysis": {
+  //     "detailed_scoring": {
+  //       "experience_match": {
+  //         "analysis": "Candidate has 6 months of internship experience but does not meet the 5+ years required for the position.",
+  //         "score": 1
+  //       },
+  //       "job_sector_match": {
+  //         "analysis": "Candidate has a relevant educational background and internship experience in web development, aligning with the job sector.",
+  //         "score": 2
+  //       },
+  //       "longevity_score": {
+  //         "analysis": "Candidate is a recent graduate with no long-term work experience, which is a gap for the role.",
+  //         "score": 1
+  //       },
+  //       "primary_skill_match": {
+  //         "analysis": "Candidate demonstrates proficiency in JavaScript, HTML/CSS, and Python but lacks experience with Flask, a key requirement.",
+  //         "score": 1.5
+  //       }
+  //     },
+  //     "executive_summary": {
+  //       "candidate_name": "Bella Trevino",
+  //       "critical_gaps": [
+  //         "Lack of required 5+ years experience in Python/Flask",
+  //         "Limited exposure to Flask specifically",
+  //         "Need for more extensive work experience"
+  //       ],
+  //       "key_strengths": [
+  //         "Strong academic background with a GPA of 3.9",
+  //         "Experience in full-stack development",
+  //         "Successful project management and collaboration"
+  //       ],
+  //       "overall_score": 5.5,
+  //       "position_applied": "Web Developer",
+  //       "recommendation": "Not Recommended"
+  //     },
+  //     "final_evaluation": {
+  //       "experience_alignment": 3.0,
+  //       "growth_potential": "Moderate",
+  //       "justification": "Candidate does not meet the experience requirements and lacks specific skills in Flask, which are critical for the role.",
+  //       "recommendation": "Not Recommended",
+  //       "risk_level": "High",
+  //       "technical_alignment": 5.0
+  //     },
+  //     "interview_questions": [
+  //       {
+  //         "category": "Technical Depth",
+  //         "question": "Based on your Social Media Scheduler project, how would you redesign that system to meet our requirement for scalability using Flask?",
+  //         "context": {
+  //           "assessment_focus": "Technical depth in Flask and system design",
+  //           "candidate_experience": "Built a responsive app with Django and Node",
+  //           "jd_requirement": "Experience in Flask and scalable applications"
+  //         },
+  //         "scoring_guidance": {
+  //           "excellent_response": "Demonstrates clear understanding of Flask, scalability solutions, and applies knowledge to the project.",
+  //           "acceptable_response": "Shows some knowledge of Flask but lacks depth in scalability.",
+  //           "concerning_response": "Unfamiliar with Flask and provides vague responses."
+  //         }
+  //       }
+  //     ]
+  //   }
+  // };
 
   const getScoreColor = (score: number) => {
     if (score >= 4) return 'bg-green-500';
