@@ -10,6 +10,7 @@ import {
   LogOut,
   Settings,
   User,
+  LineChart,
 } from "lucide-react"
 import {
   Avatar,
@@ -95,16 +96,13 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              {/* <DropdownMenuItem onClick={() => navigate('/profile')}>
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem> */}
+
               <DropdownMenuItem onClick={() => navigate('/usage')}>
-                <Settings className="mr-2 h-4 w-4" />
+                <LineChart className="mr-2 h-4 w-4" />
                 Usage
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Bell className="mr-2 h-4 w-4" />
+                <CreditCard className="mr-2 h-4 w-4" />
                 Billing
               </DropdownMenuItem>
             </DropdownMenuGroup>

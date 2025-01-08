@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/services/authContext';
+import { useLocation } from 'react-router-dom';
 
 export function AppHeader() {
-
+  const location = useLocation();
   const shouldShowSteps = (
     ['/verify-otp', '/plans', '/checkout', '/login'].some(path => 
       location.pathname.includes(path)

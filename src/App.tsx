@@ -14,6 +14,7 @@ import LandingPage from './pages/LandingPage';
 import UsageDashboard from './pages/UsageDashboard';
 import { StepIndicatorContainer } from './components/progress-indicator';
 import { AppLayout } from './components/AppHeader';
+import { PlansProvider } from './services/plansContext';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -120,8 +121,10 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <Toaster />
-        <AppRoutes />
+        <PlansProvider>
+          <Toaster />
+            <AppRoutes />
+        </PlansProvider>
       </AuthProvider>
     </Router>
   );
