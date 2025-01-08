@@ -9,6 +9,13 @@ interface APIResponse {
   data?: any;
 }
 
+interface ResetPasswordData {
+  email: string;
+  otp_code: string;
+  new_password: string;
+}
+
+
 // Verify Email
 export const verifyEmail = async (email: string): Promise<APIResponse> => {
   try {
@@ -242,14 +249,15 @@ export const api = {
 
 
   getResumeAnalysis: async (job_description_id: string, resume_id: string) => {
-    const response = await fetch(`${API_BASE_URL}/api/${job_description_id}/resumes/${resume_id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/jobs/${job_description_id}/resumes/${resume_id}/analysis`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
       },
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch resume analysis');
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || 'Failed to fetch resume analysis');
     }
 
     return response.json();
@@ -313,6 +321,40 @@ export const api = {
 
     if (!response.ok) {
       throw new Error('Failed to get session status');
+    }
+
+    return response.json();
+  },
+
+  requestPasswordReset: async (email: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/reset-request`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Failed to request password reset');
+    }
+
+    return response.json();
+  },
+
+  resetPassword: async (data: ResetPasswordData) => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Failed to reset password');
     }
 
     return response.json();

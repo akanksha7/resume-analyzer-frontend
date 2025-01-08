@@ -15,6 +15,8 @@ import UsageDashboard from './pages/UsageDashboard';
 import { StepIndicatorContainer } from './components/progress-indicator';
 import { AppLayout } from './components/AppHeader';
 import { PlansProvider } from './services/plasnContext';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -89,6 +91,8 @@ function AppRoutes() {
       <Route path="/" element={<LandingPage />}/>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       
       {/* Verification route with special protection */}
       <Route path="/verify-otp" element={
