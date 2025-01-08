@@ -35,7 +35,7 @@ import {
   Target
 } from 'lucide-react';
 
-const ResumeAnalysis = ({ data }) => {
+const ResumeAnalysis = ({ data }: { data: any }) => {
   // Sample data
   // const data = {
   //   "analysis": {
