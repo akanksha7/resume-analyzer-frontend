@@ -2,38 +2,17 @@ import { toast } from '@/components/hooks/use-toast';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { PricingCard } from '@/components/pricing-card';
 import { Button } from "@/components/ui/button";
-import { usePlans } from '@/services/plansContext';
+import { usePlans } from '@/services/plasnContext';
 import { useAuth } from '@/services/authContext';
-import type { Plan } from '@/types/types';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import { FC, useEffect, useState } from 'react';
+import { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const PricingPage: FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { plans, isLoading } = usePlans();
-
-  // useEffect(() => {
-  //   const fetchPlans = async () => {
-  //     try {
-  //       const response = await api.getPlans();
-  //       setPlans(response.plans);
-  //     } catch (error) {
-  //       console.error('Failed to fetch plans:', error);
-  //       toast({
-  //         title: "Error",
-  //         description: "Failed to load pricing plans. Please try again.",
-  //         variant: "destructive",
-  //       });
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   fetchPlans();
-  // }, []);
 
   const handlePlanSelect = async (planId: string) => {
     try {

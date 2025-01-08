@@ -69,6 +69,7 @@ export const api = {
       `${API_BASE_URL}/api/catalogs/${catalogId}/resumes?job_description_id=${jobDescriptionId}`,
       {
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
       }
@@ -206,8 +207,9 @@ export const api = {
 
     return response.json();
   },
-  getResumeAnalysis: async (resumeId: string) => {
-    const response = await fetch(`${API_BASE_URL}/api/resumes/${resumeId}/analysis`, {
+
+  getResumeAnalysis: async (job_description_id: string, resume_id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/${job_description_id}/resumes/${resume_id}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
       },
@@ -219,6 +221,7 @@ export const api = {
 
     return response.json();
   },
+  
   deleteResume: async (catalog_id: string, resume_id: string) => {
     const response = await fetch(`${API_BASE_URL}/api/catalogs/${catalog_id}/resumes/${resume_id} `, {
       method: 'DELETE',

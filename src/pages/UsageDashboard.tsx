@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { cn } from '@/lib/utils';
-import { usePlans } from '@/services/plansContext';
+import { usePlans } from '@/services/plasnContext';
 import type { Stats } from '@/types/types';
 import type { Feature } from '@/types/types';
 import { useAuth } from '@/services/authContext';
