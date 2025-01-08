@@ -102,7 +102,7 @@ export function ResumeDataTable<TData extends { id: string }, TValue>({
         <Button
           size="sm"
           onClick={() => onAnalyzeSelected?.(selectedRows)}
-          disabled={selectedRows.length === 0 || isLoading}
+          disabled={selectedRows.length < 2|| isLoading}   // TODO: change to 50
           className="w-full sm:w-auto"
         >
           {isLoading ? (
@@ -110,7 +110,7 @@ export function ResumeDataTable<TData extends { id: string }, TValue>({
           ) : (
             <Play className="h-4 w-4 mr-2" />
           )}
-          Analyze {selectedRows.length > 0 && `(${selectedRows.length})`}
+          Run Batch Analysis {selectedRows.length > 0 && `(${selectedRows.length})`}
         </Button>
       </div>
 

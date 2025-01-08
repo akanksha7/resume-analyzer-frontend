@@ -11,8 +11,8 @@ export interface ResumeData {
   id: string;
   filename: string;
   s3_url?: string;
-  is_analyzed: boolean;
-  matchScore: number;
+  is_analyzed: boolean;  
+  match_score: number | null;
 }
 
 interface TableMeta {
@@ -108,28 +108,28 @@ export const columns: ColumnDef<ResumeData, unknown>[] = [
     },
   },
   {
-    accessorKey: "analysisStatus",
+    accessorKey: "is_analyzed", 
     header: ({ column }) => (
       <div className="text-center">Status</div>
     ),
     cell: ({ row }) => {
-      const status = row.getValue("is_analyzed") as string;
+      const isAnalyzed = row.getValue("is_analyzed") as boolean;
       return (
         <div className="text-center">
           <span className={cn(
             "px-2 py-1 text-xs font-medium",
-            status === 'true' 
+            isAnalyzed
               ? "text-green-600" 
               : "text-muted-foreground"
           )}>
-            {status === 'true' ? 'Analyzed' : 'Queued'}
+            {isAnalyzed ? 'Analyzed' : 'Queued'}
           </span>
         </div>
       );
     },
   },
   {
-    accessorKey: "matchScore",
+    accessorKey: "match_score",  // Change to match the API response field name
     header: ({ column }) => {
       return (
         <div className="text-center">
@@ -145,32 +145,35 @@ export const columns: ColumnDef<ResumeData, unknown>[] = [
       );
     },
     cell: ({ row }) => {
-      const status = row.getValue("is_analyzed") as string;
-      const score = row.getValue("matchScore") as number;
-
+      const isAnalyzed = row.getValue("is_analyzed") as boolean;
+      const score = row.getValue("match_score") as number | null;
+  
       return (
         <div className="text-center">
           <span className={cn(
             "font-medium",
-            status === 'true'
+            isAnalyzed && score !== null
               ? score >= 80
                 ? "text-green-600"
                 : "text-red-600"
               : "text-muted-foreground"
           )}>
-            {status === 'true' ? `${score}%` : '-'}
+            {isAnalyzed && score !== null ? `${score}%` : '-'}
           </span>
         </div>
       );
     },
     sortingFn: (rowA, rowB, columnId) => {
-      const a = rowA.getValue(columnId) as number;
-      const b = rowB.getValue(columnId) as number;
-      const statusA = rowA.getValue("is_analyzed") as string;
-      const statusB = rowB.getValue("is_analyzed") as string;
-
-      if (statusA === 'false' && statusB === 'true') return 1;
-      if (statusA === 'true' && statusB === 'false') return -1;
+      const a = rowA.getValue(columnId) as number | null;
+      const b = rowB.getValue(columnId) as number | null;
+      const isAnalyzedA = rowA.getValue("is_analyzed") as boolean;
+      const isAnalyzedB = rowB.getValue("is_analyzed") as boolean;
+  
+      if (!isAnalyzedA && isAnalyzedB) return 1;
+      if (isAnalyzedA && !isAnalyzedB) return -1;
+      if (a === null && b === null) return 0;
+      if (a === null) return 1;
+      if (b === null) return -1;
       return a < b ? -1 : a > b ? 1 : 0;
     },
   },
@@ -180,10 +183,10 @@ export const columns: ColumnDef<ResumeData, unknown>[] = [
     cell: ({ row, table }) => {
       const meta = table.options.meta as TableMeta;
       const resume = row.original;
-
+  
       return (
         <div className="flex justify-end gap-2 pr-4">
-          {resume.is_analyzed === 'true' && (
+          {resume.is_analyzed && ( 
             <Button
               variant="outline"
               size="sm"

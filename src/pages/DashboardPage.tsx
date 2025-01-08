@@ -298,39 +298,39 @@ const handleDeleteJob = async (catalogId: string, jobId: string) => {
   }
 };
 
-  useEffect(() => {
-    const fetchExistingResumes = async () => {
-      if (!activeJob?.catalog_id) return;
+useEffect(() => {
+  const fetchExistingResumes = async () => {
+    if (!activeJob?.catalog_id) return;
+    
+    setIsLoadingResumes(true);
+    try {
+      const response = await api.getResumes(activeJob.catalog_id, activeJob.id);
       
-      setIsLoadingResumes(true);
-      try {
-        // Fetch resumes with job_description_id for analysis
-        const response = await api.getResumes(activeJob.catalog_id, activeJob.id);
-        
-        // Transform the data with analysis if it exists
-        const resumesWithAnalysis = response.items.map((resume: any) => ({
-          id: resume.id,
-          filename: resume.filename,
-          created_at: resume.created_at,
-          analysisStatus: resume.analysis ? 'completed' : 'queued',
-          matchScore: resume.analysis ? resume.analysis.score : 0
-        }));
-  
-        setUploadedResumes(resumesWithAnalysis);
-      } catch (error) {
-        console.error('Failed to fetch resumes:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load existing resumes",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoadingResumes(false);
-      }
-    };
-  
-    fetchExistingResumes();
-  }, [activeJob?.catalog_id, activeJob?.id]);
+      const resumesWithAnalysis = response.items.map((resume: any) => ({
+        id: resume.id,
+        filename: resume.filename,
+        s3_url: resume.s3_url,
+        created_at: resume.created_at,
+        is_analyzed: resume.is_analyzed,
+        match_score: resume.match_score  
+      }));
+
+      console.log('Transformed resumes:', resumesWithAnalysis); 
+      setUploadedResumes(resumesWithAnalysis);
+    } catch (error) {
+      console.error('Failed to fetch resumes:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load existing resumes",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingResumes(false);
+    }
+  };
+
+  fetchExistingResumes();
+}, [activeJob?.catalog_id, activeJob?.id]);
 
 
   const renderBreadcrumb = () => {
