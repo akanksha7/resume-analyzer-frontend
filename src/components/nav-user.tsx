@@ -1,22 +1,9 @@
 "use client"
 
-import { useAuth } from '@/services/authContext';
-import { useNavigate } from 'react-router-dom';
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Settings,
-  User,
-  LineChart,
-} from "lucide-react"
 import {
   Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+  AvatarFallback
+} from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,13 +12,21 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
+import { useAuth } from '@/services/authContext';
+import {
+  ChevronsUpDown,
+  CreditCard,
+  LineChart,
+  LogOut
+} from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 export function NavUser() {
   const { user, logout } = useAuth();
@@ -45,14 +40,14 @@ export function NavUser() {
     navigate('/login');
   };
 
-  // Get initials for avatar fallback
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase();
-  };
+  // // Get initials for avatar fallback
+  // const getInitials = (name: string) => {
+  //   return name
+  //     .split(' ')
+  //     .map(part => part[0])
+  //     .join('')
+  //     .toUpperCase();
+  // };
 
   return (
     <SidebarMenu>
@@ -65,11 +60,10 @@ export function NavUser() {
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarFallback className="rounded-lg">
-                  {getInitials(user.email)}
+                  {user.email.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                {/* <span className="truncate font-semibold">{"test test"}</span> */}
                 <span className="truncate text-xs">{user.email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
@@ -85,12 +79,11 @@ export function NavUser() {
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarFallback className="rounded-lg">
-                    {getInitials(user.email)}
+                  {user.email.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  {/* <span className="truncate font-semibold">{"test test"}</span> */}
-                  <span className="truncate text-xs">{user.email}</span>
+                  <span className="truncate text-sm">{user.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>

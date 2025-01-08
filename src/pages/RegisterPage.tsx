@@ -92,7 +92,7 @@ export default function RegisterPage() {
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-input border-border"
+                className="bg-background-tertiary border-border/40"
               />
             </div>
             
@@ -104,6 +104,7 @@ export default function RegisterPage() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
+                  placeholder="Enter your password"
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-background-tertiary border-border/40 pr-10"
                   required
@@ -137,6 +138,7 @@ export default function RegisterPage() {
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
+                  placeholder="Re-enter your password"
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className={cn(
                     "bg-background-tertiary border-border/40 pr-10",

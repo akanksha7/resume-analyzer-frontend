@@ -129,7 +129,7 @@ export const columns: ColumnDef<ResumeData, unknown>[] = [
     },
   },
   {
-    accessorKey: "match_score",  // Change to match the API response field name
+    accessorKey: "match_score",  
     header: ({ column }) => {
       return (
         <div className="text-center">

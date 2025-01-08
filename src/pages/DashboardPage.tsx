@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Textarea } from "@/components/ui/textarea";
 import { MoreHorizontal, Trash2, UploadCloud } from "lucide-react";
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Card } from "@/components/ui/card";
@@ -68,19 +68,6 @@ enum DashboardView {
   UPLOAD_RESUMES
 }
 
-interface ResumeAnalysis {
-  id: string;
-  match_score: number;
-  created_at: string;
-}
-
-// interface Resume {
-//   id: string;
-//   filename: string;
-//   analysis?: ResumeAnalysis;
-//   analysisStatus: 'queued' | 'completed';
-//   matchScore: number;
-// }
 
 const Dashboard = ({ onJobDelete }: DashboardProps) => {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -99,10 +86,6 @@ const Dashboard = ({ onJobDelete }: DashboardProps) => {
   const navigate = useNavigate();
 
   const [isLoadingResumes, setIsLoadingResumes] = useState(false);
-  // const isAllSelected = useMemo(() => 
-  //   uploadedResumes.length > 0 && selectedResumes.length === uploadedResumes.length,
-  //   [uploadedResumes.length, selectedResumes.length]
-  // );
   const [selectedResumes, setSelectedResumes] = useState<string[]>([]);
 
   useEffect(() => {
@@ -152,8 +135,9 @@ const Dashboard = ({ onJobDelete }: DashboardProps) => {
     }
   };
 
-  const handleViewAnalysis = (resumeId: string) => {
-    navigate(`/resume-analysis/${resumeId}`);
+  const handleViewAnalysis = async (resumeId: string) => {
+    const resumeAnalysis = await api.getResumeAnalysis(activeJob?.id || '', resumeId);
+    navigate(`/resume-analysis`, { state: { resumeAnalysis } });
   };
 
   const handleDeleteResume = async (resumeId: string) => {
@@ -273,7 +257,7 @@ const Dashboard = ({ onJobDelete }: DashboardProps) => {
     }
   };
 
-// Updated handleDeleteJob function
+
 const handleDeleteJob = async (catalogId: string, jobId: string) => {
   try {
     await api.deleteJob(catalogId, jobId);
@@ -586,7 +570,6 @@ useEffect(() => {
             setUploadedResumes([]);
           }}
           onCatalogDelete={handleCatalogDelete}
-          // onJobUpdate={handleUpdateJob}
           onJobDelete={handleDeleteJob}
         />
         <SidebarInset>

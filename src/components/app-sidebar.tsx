@@ -174,7 +174,7 @@ export function AppSidebar({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <SearchForm />
+        {/* <SearchForm /> */}
       </SidebarHeader>
 
       <SidebarContent>
