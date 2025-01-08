@@ -1,3 +1,4 @@
+// dashboard/columns.tsx
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
@@ -5,6 +6,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown, ExternalLink, FileText, Trash2 } from "lucide-react"
 import { useState } from "react"
+import ResumeAnalysisDialog from "../resume-analysis-dailog"
 
 interface ResumeData {
   id: string;
@@ -169,22 +171,30 @@ export const columns: ColumnDef<ResumeData>[] = [
   {
     id: "actions",
     header: () => <div className="text-right pr-4">Actions</div>,
-    cell: ({ row, table }) => {
-      const resume = row.original
-      const { onViewAnalysis, onDeleteResume } = table.options.meta as any
+    cell: ({ row }) => {
+      const resume = row.original;
+      const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
 
       return (
         <div className="flex justify-end gap-2 pr-4">
           {resume.analysisStatus === 'completed' && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onViewAnalysis?.(resume.id)}
-              className="h-8"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              View Analysis
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAnalysisOpen(true)}
+                className="h-8"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                View Analysis
+              </Button>
+              
+              <ResumeAnalysisDialog
+                isOpen={isAnalysisOpen}
+                onClose={() => setIsAnalysisOpen(false)}
+                resumeId={resume.id}
+              />
+            </>
           )}
           <Button
             variant="ghost"
