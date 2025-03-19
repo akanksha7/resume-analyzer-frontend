@@ -1,5 +1,5 @@
-# Demo
-![Talent Tuner Demo](./src/assets/demo2-ezgif.com-video-to-gif-converter.gif)
+# Resume Analyzer Frontend
+![Talent Tuner Demo](src/assets/demo2.gif)
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
